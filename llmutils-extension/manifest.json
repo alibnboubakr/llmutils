@@ -1,0 +1,41 @@
+{
+  "name": "LLMUtils Extension",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "The Missing Toolbox for AI Workers - Context menu tools and token counter",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://llmutils.co/*",
+    "https://chat.openai.com/*",
+    "https://claude.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chat.openai.com/*", "https://claude.ai/*"],
+      "js": ["content/token-counter.js"],
+      "css": ["content/style.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
