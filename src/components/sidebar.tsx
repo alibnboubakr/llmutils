@@ -37,8 +37,13 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const pathname = usePathname();
 
-  // Don't show sidebar on landing page
-  if (pathname === "/") return <>{children}</>;
+  // Don't show sidebar on landing or auth pages
+  const hideSidebar =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname.startsWith("/auth/");
+  if (hideSidebar) return <>{children}</>;
 
   return (
     <div className="flex h-screen">

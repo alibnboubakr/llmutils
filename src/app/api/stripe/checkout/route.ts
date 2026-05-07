@@ -1,49 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCheckoutSession } from "@/lib/stripe";
-import { createServerSupabaseClient } from "@/lib/supabase";
+import {
+  createCheckoutSession,
+  PRO_MONTHLY_PRICE_ID,
+  PRO_YEARLY_PRICE_ID,
+} from "@/lib/stripe";
+import { createServerSupabaseClient } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, userId } = await request.json();
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const plan = body?.plan === "yearly" ? "yearly" : "monthly";
+    const priceId =
+      plan === "yearly" ? PRO_YEARLY_PRICE_ID : PRO_MONTHLY_PRICE_ID;
 
     if (!priceId) {
       return NextResponse.json(
-        { error: "Price ID is required" },
-        { status: 400 }
+        { error: "Pricing is not configured" },
+        { status: 500 }
       );
     }
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "User ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Get or create Stripe customer for user
-    const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from("profiles")
       .select("stripe_customer_id")
-      .eq("id", userId)
+      .eq("id", user.id)
       .single();
 
-    const customerId = profile?.stripe_customer_id;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
 
     const session = await createCheckoutSession({
-      customerId,
+      customerId: profile?.stripe_customer_id ?? undefined,
       priceId,
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/settings?success=true`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/settings?canceled=true`,
-      userId,
+      successUrl: `${appUrl}/settings?success=true`,
+      cancelUrl: `${appUrl}/settings?canceled=true`,
+      userId: user.id,
     });
 
     return NextResponse.json({ sessionId: session.id, url: session.url });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Checkout error:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Checkout failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

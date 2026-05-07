@@ -1,41 +1,35 @@
 import Stripe from "stripe";
 
-// Only validate in runtime, not during build
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const monthlyPriceId = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
-const yearlyPriceId = process.env.STRIPE_PRO_YEARLY_PRICE_ID;
+let _stripe: Stripe | null = null;
 
-// Lazy validation - only runs when stripe is actually used
-function validateStripeConfig() {
-  if (typeof window !== 'undefined') return; // Skip on client-side
-  
-  if (!stripeSecretKey && process.env.NODE_ENV === 'production') {
-    console.error('Warning: STRIPE_SECRET_KEY is not set');
+function getStripe(): Stripe {
+  if (_stripe) return _stripe;
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error(
+      "STRIPE_SECRET_KEY is not configured. Set it in your environment."
+    );
   }
-  
-  if ((!monthlyPriceId || monthlyPriceId === 'price_your_monthly_pro_price_id_here') && 
-      process.env.NODE_ENV === 'production') {
-    console.error('Warning: STRIPE_PRO_MONTHLY_PRICE_ID is not properly configured');
-  }
-  
-  if ((!yearlyPriceId || yearlyPriceId === 'price_your_yearly_pro_price_id_here') && 
-      process.env.NODE_ENV === 'production') {
-    console.error('Warning: STRIPE_PRO_YEARLY_PRICE_ID is not properly configured');
-  }
+  _stripe = new Stripe(key, {
+    apiVersion: "2025-08-27.basil" as Stripe.LatestApiVersion,
+    typescript: true,
+  });
+  return _stripe;
 }
 
-export const stripe = new Stripe(stripeSecretKey || 'sk_test_placeholder', {
-  apiVersion: "2025-08-27.basil" as Stripe.LatestApiVersion,
-  typescript: true,
+// Proxy lets existing `import { stripe }` call sites keep working while
+// deferring instantiation until first use.
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    const value = Reflect.get(getStripe(), prop, getStripe());
+    return typeof value === "function" ? value.bind(getStripe()) : value;
+  },
 });
 
-// Validate on module load (server-side only)
-if (typeof window === 'undefined') {
-  validateStripeConfig();
-}
-
-export const PRO_MONTHLY_PRICE_ID = monthlyPriceId || "price_your_monthly_pro_price_id_here";
-export const PRO_YEARLY_PRICE_ID = yearlyPriceId || "price_your_yearly_pro_price_id_here";
+export const PRO_MONTHLY_PRICE_ID =
+  process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? "";
+export const PRO_YEARLY_PRICE_ID =
+  process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? "";
 
 export async function createCheckoutSession({
   customerId,
@@ -50,7 +44,7 @@ export async function createCheckoutSession({
   cancelUrl: string;
   userId: string;
 }) {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     payment_method_types: ["card"],
     line_items: [
@@ -72,12 +66,8 @@ export async function createCheckoutSession({
 }
 
 export async function handleSubscriptionChange(subscription: Stripe.Subscription) {
-  // Update user plan in Supabase based on subscription status
   const customerId = subscription.customer as string;
   const status = subscription.status;
-
-  // Map Stripe status to our plan
   const plan = status === "active" ? "pro" : "free";
-
   return { customerId, plan };
 }

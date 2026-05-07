@@ -43,9 +43,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path)
   );
 
-  // If user is not signed in and the path is protected, redirect to home
+  // If user is not signed in and the path is protected, redirect to login
   if (!user && isProtectedPath) {
-    const redirectUrl = new URL("/", request.url);
+    const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirect", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }

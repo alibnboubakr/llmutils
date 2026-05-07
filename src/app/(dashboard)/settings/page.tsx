@@ -1,11 +1,70 @@
 "use client";
 
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [email, setEmail] = React.useState<string>("");
+  const [createdAt, setCreatedAt] = React.useState<string>("");
+  const [upgrading, setUpgrading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setEmail(user.email ?? "");
+        if (user.created_at) {
+          setCreatedAt(
+            new Date(user.created_at).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "long",
+            })
+          );
+        }
+      }
+    });
+  }, []);
+
+  async function onUpgrade() {
+    setError(null);
+    setUpgrading(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "monthly" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error("Missing checkout URL");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Checkout failed");
+      setUpgrading(false);
+    }
+  }
+
+  async function onSignOut() {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-8">Settings</h1>
@@ -19,7 +78,7 @@ export default function SettingsPage() {
               <div>
                 <CardTitle>Free Plan</CardTitle>
                 <CardDescription>
-                  You're currently on the free plan
+                  You&apos;re currently on the free plan
                 </CardDescription>
               </div>
               <Badge variant="secondary">Current Plan</Badge>
@@ -44,9 +103,12 @@ export default function SettingsPage() {
                 <span className="line-through">Full History</span>
               </li>
             </ul>
-            <Button>
-              Upgrade to Pro ($9/month)
+            <Button onClick={onUpgrade} disabled={upgrading}>
+              {upgrading ? "Redirecting..." : "Upgrade to Pro ($9/month)"}
             </Button>
+            {error && (
+              <p className="mt-3 text-sm text-destructive">{error}</p>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -64,7 +126,7 @@ export default function SettingsPage() {
                     <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary rounded-full"
-                        style={{ width: `${(2 / 5) * 100}%` }} // Example: 2/5 used
+                        style={{ width: `${(2 / 5) * 100}%` }}
                       />
                     </div>
                     <span className="text-sm text-muted-foreground">2/5</span>
@@ -83,13 +145,17 @@ export default function SettingsPage() {
           <CardContent className="pt-6 space-y-4">
             <div>
               <p className="text-sm font-medium mb-1">Email</p>
-              <p className="text-sm text-muted-foreground">user@example.com</p>
+              <p className="text-sm text-muted-foreground">
+                {email || "—"}
+              </p>
             </div>
             <div>
               <p className="text-sm font-medium mb-1">Member Since</p>
-              <p className="text-sm text-muted-foreground">May 2026</p>
+              <p className="text-sm text-muted-foreground">
+                {createdAt || "—"}
+              </p>
             </div>
-            <Button variant="outline" className="mt-4">
+            <Button variant="outline" className="mt-4" onClick={onSignOut}>
               Sign Out
             </Button>
           </CardContent>
