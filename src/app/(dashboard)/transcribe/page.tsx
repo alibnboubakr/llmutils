@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Copy, Loader2, Youtube } from "lucide-react";
 
 function formatTime(ms: number): string {
@@ -147,8 +148,10 @@ export default function TranscribePage() {
         </Card>
       )}
 
+      <ToolUsageTip />
+
       <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Badge variant="secondary">Free: 5 fetches/day</Badge>
+        <Badge variant="secondary">Free: 10 fetches/day</Badge>
         <span>
           Transcripts are pulled from YouTube&apos;s captions when available.
         </span>

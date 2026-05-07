@@ -128,9 +128,7 @@ export default function SanitizePage() {
 
       <ToolUsageTip />
 
-      <ToolUsageTip />
-
-<div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+      <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
         <Badge variant="secondary">Free: 10 uses/day</Badge>
         <span>Upgrade to Pro for unlimited sanitization</span>
       </div>

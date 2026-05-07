@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ToolUsageTip } from "@/components/tool-usage-tip";
 import {
   Download,
   FileText,
@@ -219,6 +220,8 @@ export default function ChatExporterPage() {
           </CardContent>
         </Card>
       </div>
+
+      <ToolUsageTip />
 
       <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
         <Badge variant="secondary">Free: 10 exports/day</Badge>
