@@ -5,16 +5,86 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Upload } from "lucide-react";
+import { Loader2, Copy } from "lucide-react";
+
+// RFC 4180 CSV parser: handles quoted fields, embedded commas/newlines, escaped quotes.
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && next === '"') {
+        field += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        field += char;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(field);
+      field = "";
+    } else if (char === "\n" || char === "\r") {
+      // Handle \r\n by skipping the \n that follows \r
+      if (char === "\r" && next === "\n") i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += char;
+    }
+  }
+
+  // Flush final field/row
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  // Drop fully-empty trailing rows
+  while (rows.length && rows[rows.length - 1].every((c) => c === "")) {
+    rows.pop();
+  }
+
+  return rows;
+}
+
+function coerceValue(raw: string): unknown {
+  const trimmed = raw.trim();
+  if (trimmed === "") return "";
+  if (trimmed === "true") return true;
+  if (trimmed === "false") return false;
+  if (trimmed === "null") return null;
+  if (/^-?\d+$/.test(trimmed)) {
+    const n = Number(trimmed);
+    if (Number.isSafeInteger(n)) return n;
+  }
+  if (/^-?\d*\.\d+$/.test(trimmed)) return Number(trimmed);
+  return raw;
+}
 
 export default function CsvToJsonPage() {
   const [csvData, setCsvData] = useState("");
   const [jsonOutput, setJsonOutput] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setError(null);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -26,26 +96,26 @@ export default function CsvToJsonPage() {
   const convertCsvToJson = () => {
     if (!csvData) return;
     setLoading(true);
+    setError(null);
 
     try {
-      const lines = csvData.split("\n").filter((line) => line.trim());
-      if (lines.length < 2) throw new Error("CSV must have at least a header and one data row");
-
-      const headers = lines[0].split(",").map((h) => h.trim());
-      const result = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(",").map((v) => v.trim());
-        const obj: any = {};
-        headers.forEach((header, index) => {
-          obj[header] = values[index] || "";
-        });
-        result.push(obj);
+      const rows = parseCsv(csvData);
+      if (rows.length < 2) {
+        throw new Error("CSV must have a header row and at least one data row");
       }
 
+      const headers = rows[0].map((h) => h.trim());
+      const result = rows.slice(1).map((row) => {
+        const obj: Record<string, unknown> = {};
+        headers.forEach((header, index) => {
+          obj[header] = coerceValue(row[index] ?? "");
+        });
+        return obj;
+      });
+
       setJsonOutput(JSON.stringify(result, null, 2));
-    } catch (error: any) {
-      alert(error.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to parse CSV");
     } finally {
       setLoading(false);
     }
@@ -94,6 +164,7 @@ export default function CsvToJsonPage() {
               ) : null}
               Convert to JSON
             </Button>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </CardContent>
       </Card>

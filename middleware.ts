@@ -38,9 +38,31 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes that require authentication
-  const protectedPaths = ["/dashboard", "/history", "/settings"];
-  const isProtectedPath = protectedPaths.some(path => 
-    request.nextUrl.pathname.startsWith(path)
+  const protectedPaths = [
+    "/dashboard",
+    "/history",
+    "/settings",
+    // Tools — must be signed in to use
+    "/markdown",
+    "/markdown-preview",
+    "/sanitize",
+    "/un-sanitizer",
+    "/json",
+    "/json-formatter",
+    "/csv-to-json",
+    "/regex",
+    "/diff",
+    "/transcribe",
+    "/image-ocr",
+    "/html-to-jsx",
+    "/code-minifier",
+    "/chat-exporter",
+    "/token-estimator",
+    "/request",
+  ];
+  const isProtectedPath = protectedPaths.some(path =>
+    request.nextUrl.pathname === path ||
+    request.nextUrl.pathname.startsWith(path + "/")
   );
 
   // If user is not signed in and the path is protected, redirect to login

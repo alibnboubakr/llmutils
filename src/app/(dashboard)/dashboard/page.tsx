@@ -1,12 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Shield, FileJson, History, ArrowRight } from "lucide-react";
 import { useToolStore } from "@/store/use-tool-store";
-
-// Force dynamic rendering to avoid SSR issues with Zustand
-export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
   const { history } = useToolStore();
