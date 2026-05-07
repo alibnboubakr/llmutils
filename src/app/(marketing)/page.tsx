@@ -110,8 +110,8 @@ export default async function LandingPage() {
             {/* Animated badge */}
             <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground mb-8 shadow-sm">
               <Terminal className="h-4 w-4 text-primary animate-pulse" />
-              <span className="font-medium">Built for AI workers</span>
-              <span className="text-primary">â€¢</span>
+              <span className="font-medium">Built for anyone using LLMs</span>
+              <span className="text-primary">•</span>
               <span>Fast, private, copy-paste ready</span>
             </div>
             
@@ -124,14 +124,14 @@ export default async function LandingPage() {
                 </span>
                 <div className="absolute -bottom-2 left-0 right-0 h-3 bg-primary/10 -skew-y--3 -z-10" />
               </span>
-              {" "}for AI workers
+              {" "}for everyone using LLMs
             </h1>
             
             {/* Subheading */}
             <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
-              Stop wrestling with context, formats, and API costs. 
-              <span className="text-foreground font-medium">Build prompts faster and safer</span>
-              {" "}with focused, single-purpose utilities.
+              Stop wrestling with context, formats, and AI output. 
+              <span className="text-foreground font-medium">Build cleaner prompts and smarter workflows</span>
+              {" "}with focused, single-purpose tools designed for teams, creators, and sellers.
             </p>
             
             {/* CTAs */}
@@ -169,7 +169,7 @@ export default async function LandingPage() {
             <p className="text-sm text-muted-foreground">
               Trusted by{" "}
               <span className="font-semibold text-foreground">500+</span>{" "}
-              developers and AI practitioners
+              teams, creators, and LLM users
             </p>
           </div>
         </section>

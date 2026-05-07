@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -174,8 +175,10 @@ export default function TokenEstimatorPage() {
         </Card>
       </div>
 
-      <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Badge variant="secondary">Free: 5 uses/day</Badge>
+      <ToolUsageTip />
+
+<div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+        <Badge variant="secondary">Free: 10 uses/day</Badge>
         <span>Upgrade to Pro for unlimited estimations</span>
       </div>
     </div>

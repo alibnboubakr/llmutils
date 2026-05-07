@@ -221,7 +221,7 @@ export default function ChatExporterPage() {
       </div>
 
       <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Badge variant="secondary">Free: 5 exports/day</Badge>
+        <Badge variant="secondary">Free: 10 exports/day</Badge>
         <span>Upgrade to Pro for unlimited exports.</span>
       </div>
     </div>

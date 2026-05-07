@@ -25,7 +25,7 @@ export function CopyLimitModal({ open, onOpenChange }: CopyLimitModalProps) {
         <div className="space-y-4 py-4">
           <div className="flex items-center justify-between">
             <span className="text-sm">Free Plan</span>
-            <Badge variant="secondary">5 copies/day</Badge>
+            <Badge variant="secondary">10 copies/day</Badge>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Pro Plan</span>

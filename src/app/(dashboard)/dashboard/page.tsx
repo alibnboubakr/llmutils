@@ -56,10 +56,10 @@ export default function DashboardPage() {
       {/* Header with gradient */}
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
-          Welcome back!
+          Your AI workflow dashboard
         </h1>
         <p className="text-muted-foreground text-lg">
-          Here&apos;s your productivity overview
+          Instant access to tools for writers, makers, marketers, and teams.
         </p>
       </div>
 

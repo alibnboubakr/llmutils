@@ -1,4 +1,4 @@
-export const FREE_DAILY_LIMIT = 5;
+export const FREE_DAILY_LIMIT = 10;
 
 // Canonical list of tools that count toward daily limits.
 export const TRACKED_TOOLS = [

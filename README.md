@@ -39,7 +39,7 @@ Built as a **Product-Led Growth (PLG)** engine where tools drive acquisition and
 
 ## 💳 Monetization Model
 
-**Free Tier**: 5 uses/day per tool, basic features
+**Free Tier**: 10 uses/day per tool, basic features
 **Pro Tier**: $9/month - Unlimited usage, advanced features, history, priority support
 
 Uses friction paywalls and workflow continuity to drive conversions rather than hard blocks.
@@ -138,7 +138,7 @@ llmutils/
 - ✅ Landing page with hero, social proof, pricing cards
 
 ### Phase 3: Conversion Engine (Monetization)
-- ✅ Free Tier: 5 uses/tool/day, copy/paste only, no history
+- ✅ Free Tier: 10 uses/tool/day, copy/paste only, no history
 - ✅ Pro Tier ($9/mo, $69/yr): Unlimited + Pipeline Continuity
 - ✅ "Blur" Technique for JSON output (free users see 3 lines)
 - ✅ "Copy Limit" Modal (highest-converting paywall trigger)

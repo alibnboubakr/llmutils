@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToolStore } from "@/store/use-tool-store";
 import { Badge } from "@/components/ui/badge";
+import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Loader2, Copy } from "lucide-react";
 
 // Force dynamic rendering to avoid SSR issues with Zustand
@@ -153,8 +154,12 @@ export default function JsonPage() {
         </div>
       )}
 
-      <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Badge variant="secondary">Free: 5 uses/day</Badge>
+      <ToolUsageTip />
+
+      <ToolUsageTip />
+
+<div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+        <Badge variant="secondary">Free: 10 uses/day</Badge>
         <span>Upgrade to Pro for unlimited conversions and saved schemas</span>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy } from "lucide-react";
 
@@ -186,8 +187,10 @@ export default function CsvToJsonPage() {
         </Card>
       )}
 
-      <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
-        <Badge variant="secondary">Free: 5 uses/day</Badge>
+      <ToolUsageTip />
+
+<div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+        <Badge variant="secondary">Free: 10 uses/day</Badge>
         <span>Upgrade to Pro for unlimited conversions</span>
       </div>
     </div>
