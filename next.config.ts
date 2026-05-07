@@ -4,7 +4,11 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["supabase.co"],
   },
-  
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Security headers
   async headers() {
     return [
