@@ -1,109 +1,125 @@
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, FileJson, Presentation } from "lucide-react";
+import {
+  Download,
+  FileText,
+  FileJson,
+  Presentation,
+  Loader2,
+} from "lucide-react";
+import { useTrackUsage } from "@/lib/use-track-usage";
+
+type ExportFormat = "markdown" | "pdf" | "notion" | "slides";
+
+const SAMPLE_CHAT = [
+  "User: How do I implement authentication in Next.js?",
+  "",
+  "Assistant: A few common options:",
+  "",
+  "1. NextAuth.js — drop-in OAuth providers and sessions.",
+  "2. Supabase Auth — email/password, OAuth, magic links, with Postgres + RLS.",
+  "3. Custom JWT — roll your own with httpOnly cookies.",
+  "",
+  "User: Tell me more about Supabase Auth.",
+  "",
+  "Assistant: Sure — install @supabase/supabase-js, create a client with",
+  "your URL and anon key, and use signUp / signInWithPassword / signInWithOAuth.",
+  "Combine it with Row Level Security so your database trusts the JWT directly.",
+].join("\n");
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function exportPdf(text: string) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+  const margin = 48;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const usableWidth = pageWidth - margin * 2;
+  const lineHeight = 14;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+
+  const lines = doc.splitTextToSize(text, usableWidth);
+  let y = margin;
+  for (const line of lines) {
+    if (y + lineHeight > pageHeight - margin) {
+      doc.addPage();
+      y = margin;
+    }
+    doc.text(line, margin, y);
+    y += lineHeight;
+  }
+
+  doc.save("chat-export.pdf");
+}
 
 export default function ChatExporterPage() {
-  const [chatText, setChatText] = useState(`User: How do I implement authentication in Next.js?
+  const trackUsage = useTrackUsage("chat-exporter");
+  const [chatText, setChatText] = React.useState(SAMPLE_CHAT);
+  const [format, setFormat] = React.useState<ExportFormat>("markdown");
+  const [busy, setBusy] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-Assistant: To implement authentication in Next.js, you can use several approaches:
+  const isComingSoon = format === "notion" || format === "slides";
 
-1. **Using NextAuth.js (Auth.js)**
-   - Install: \`npm install next-auth\`
-   - Create \`[...nextauth].ts\` API route
-   - Configure providers (Google, GitHub, etc.)
-
-2. **Using Supabase Auth**
-   - Install: \`npm install @supabase/supabase-js\`
-   - Use Supabase client for auth operations
-
-3. **Custom JWT Implementation**
-   - Create login API endpoint
-   - Use jsonwebtoken library
-   - Store token in httpOnly cookie
-
-Which approach would you like me to elaborate on?
-
-User: Tell me more about Supabase Auth
-
-Assistant: Sure! Here's how to implement Supabase Auth in Next.js:
-
-\`\`\`typescript
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-// Sign up
-const { data, error } = await supabase.auth.signUp({
-  email: 'user@example.com',
-  password: 'password123',
-})
-
-// Sign in
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'password123',
-})
-\`\`\`
-
-Key features:
-- Email/Password auth
-- OAuth (Google, GitHub, etc.)
-- Magic link (passwordless)
-- Row Level Security (RLS) integration
-`);
-
-  const [exportFormat, setExportFormat] = useState<"markdown" | "pdf" | "notion" | "slides">("markdown");
-  const [exported, setExported] = useState(false);
-
-  const handleExport = () => {
-    // In production, this would generate the actual file
-    // For now, simulate export
-    setExported(true);
-    setTimeout(() => setExported(false), 3000);
-
-    if (exportFormat === "markdown") {
-      const blob = new Blob([chatText], { type: "text/markdown" });
-      downloadBlob(blob, "chat-export.md");
-    } else if (exportFormat === "pdf") {
-      alert("PDF export would be generated here using a library like puppeteer or jsPDF");
-    } else if (exportFormat === "notion") {
-      alert("Notion export would integrate with Notion API to create a new page");
-    } else if (exportFormat === "slides") {
-      alert("Slides export would convert chat to presentation format");
+  async function handleExport() {
+    if (!chatText || isComingSoon) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (format === "markdown") {
+        downloadBlob(
+          new Blob([chatText], { type: "text/markdown" }),
+          "chat-export.md"
+        );
+      } else if (format === "pdf") {
+        await exportPdf(chatText);
+      }
+      setDone(true);
+      setTimeout(() => setDone(false), 2500);
+      void trackUsage();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setBusy(false);
     }
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Chat Exporter</h1>
         <p className="text-muted-foreground mt-2">
-          Convert ChatGPT/Claude markdown exports into PDF, Notion, or Slides.
+          Save ChatGPT or Claude transcripts as Markdown or PDF.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Chat Content</CardTitle>
+            <CardTitle>Chat content</CardTitle>
           </CardHeader>
           <CardContent>
             <textarea
@@ -116,86 +132,89 @@ Key features:
 
         <Card>
           <CardHeader>
-            <CardTitle>Export Options</CardTitle>
+            <CardTitle>Export</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium mb-3">Export Format:</p>
+                <p className="text-sm font-medium mb-3">Format</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    variant={exportFormat === "markdown" ? "default" : "outline"}
-                    onClick={() => setExportFormat("markdown")}
+                    variant={format === "markdown" ? "default" : "outline"}
+                    onClick={() => setFormat("markdown")}
                     className="justify-start"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Markdown
                   </Button>
                   <Button
-                    variant={exportFormat === "pdf" ? "default" : "outline"}
-                    onClick={() => setExportFormat("pdf")}
+                    variant={format === "pdf" ? "default" : "outline"}
+                    onClick={() => setFormat("pdf")}
                     className="justify-start"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     PDF
                   </Button>
                   <Button
-                    variant={exportFormat === "notion" ? "default" : "outline"}
-                    onClick={() => setExportFormat("notion")}
-                    className="justify-start"
+                    variant="outline"
+                    onClick={() => setFormat("notion")}
+                    className="justify-start relative"
                   >
                     <FileJson className="h-4 w-4 mr-2" />
                     Notion
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Soon
+                    </span>
                   </Button>
                   <Button
-                    variant={exportFormat === "slides" ? "default" : "outline"}
-                    onClick={() => setExportFormat("slides")}
-                    className="justify-start"
+                    variant="outline"
+                    onClick={() => setFormat("slides")}
+                    className="justify-start relative"
                   >
                     <Presentation className="h-4 w-4 mr-2" />
                     Slides
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Soon
+                    </span>
                   </Button>
                 </div>
               </div>
 
-              <div className="bg-muted/50 p-4 rounded-md">
-                <h4 className="font-medium mb-2">Format Details:</h4>
-                {exportFormat === "markdown" && (
-                  <p className="text-sm text-muted-foreground">
-                    Exports as .md file preserving formatting, code blocks, and structure.
-                  </p>
-                )}
-                {exportFormat === "pdf" && (
-                  <p className="text-sm text-muted-foreground">
-                    Generates a PDF document with proper formatting and page breaks.
-                  </p>
-                )}
-                {exportFormat === "notion" && (
-                  <p className="text-sm text-muted-foreground">
-                    Creates a new Notion page with the chat content (requires Notion API key).
-                  </p>
-                )}
-                {exportFormat === "slides" && (
-                  <p className="text-sm text-muted-foreground">
-                    Converts chat into presentation slides format (PowerPoint, Google Slides).
-                  </p>
-                )}
+              <div className="bg-muted/50 p-4 rounded-md text-sm text-muted-foreground">
+                {format === "markdown" &&
+                  "Saves as .md, preserving code blocks and structure."}
+                {format === "pdf" &&
+                  "Generates a paginated PDF with monospaced text."}
+                {format === "notion" &&
+                  "Coming soon. Will create a new Notion page via the Notion API once OAuth is wired up."}
+                {format === "slides" &&
+                  "Coming soon. Will convert the chat into a Google Slides deck once OAuth is wired up."}
               </div>
 
               <Button
                 onClick={handleExport}
-                disabled={!chatText}
+                disabled={!chatText || busy || isComingSoon}
                 className="w-full"
               >
-                {exported ? (
+                {busy ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Exporting…
+                  </>
+                ) : done ? (
                   "Exported!"
                 ) : (
                   <>
                     <Download className="h-4 w-4 mr-2" />
-                    Export as {exportFormat.charAt(0).toUpperCase() + exportFormat.slice(1)}
+                    {isComingSoon
+                      ? "Not available yet"
+                      : `Export as ${format.charAt(0).toUpperCase()}${format.slice(1)}`}
                   </>
                 )}
               </Button>
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -203,7 +222,7 @@ Key features:
 
       <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
         <Badge variant="secondary">Free: 5 exports/day</Badge>
-        <span>Upgrade to Pro for unlimited exports and batch processing</span>
+        <span>Upgrade to Pro for unlimited exports.</span>
       </div>
     </div>
   );
