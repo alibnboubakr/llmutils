@@ -55,7 +55,7 @@ export default function RegexPage() {
       const re = new RegExp(pattern, flags);
       const found = testString.match(re);
       setMatches(found || []);
-    } catch (e) {
+    } catch {
       setMatches([]);
     }
   };

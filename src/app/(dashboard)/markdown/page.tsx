@@ -44,8 +44,9 @@ export default function MarkdownPage() {
         output: data.markdown,
         timestamp: Date.now(),
       });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error.message);
     } finally {
       setLoading(false);
     }

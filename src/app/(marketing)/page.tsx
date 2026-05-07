@@ -19,7 +19,6 @@ import {
   Sparkles,
   Rocket,
   Terminal,
-  ChevronRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -191,7 +190,7 @@ export default async function LandingPage() {
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {tools.map((tool, index) => (
+            {tools.map((tool) => (
               <Card
                 key={tool.href}
                 className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1"

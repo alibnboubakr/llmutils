@@ -2,6 +2,7 @@
 // Install: npm install posthog-js
 
 // Dynamic import for posthog-js to avoid SSR issues
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let posthog: any = null;
 
 if (typeof window !== "undefined") {
@@ -13,9 +14,10 @@ if (typeof window !== "undefined") {
     if (apiKey && apiKey !== "ph_project_token") {
       posthog.init(apiKey, {
         api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
-        loaded: (posthog: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        loaded: (posthogInstance: any) => {
           if (process.env.NODE_ENV === "development") {
-            posthog.debug();
+            posthogInstance.debug();
           }
         },
       });

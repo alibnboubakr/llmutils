@@ -6,7 +6,7 @@
 
 | Component | Technology | Version |
 |-----------|-------------|---------|
-| Framework | Next.js (App Router + Turbopack) | 15.3 |
+| Framework | Next.js (App Router + Turbopack) | 15.5.15 |
 | UI Library | shadcn/ui + Tailwind CSS | v2 + 4.0 |
 | Language | TypeScript | 5.7 |
 | Auth & DB | Supabase (Google/GitHub OAuth + Postgres) | JS v2.49 |
@@ -15,6 +15,34 @@
 | Billing | Stripe Checkout + Webhooks | Node v18 |
 | Chrome Extension | Plasmo (Manifest V3) | 0.90 |
 | Analytics | PostHog + Vercel Analytics | Latest |
+
+## 🎯 Product Strategy
+
+Built as a **Product-Led Growth (PLG)** engine where tools drive acquisition and workflow continuity drives monetization. The 15-tool suite follows the AI workflow lifecycle: *Input → Processing → Output*.
+
+### Core Tools Implemented
+- **Web-to-Markdown**: Clean LLM-ready text from URLs
+- **Context Sanitizer**: Masks API keys/PII before LLM input
+- **Unstructured-to-JSON**: Messy text → structured JSON
+- **JSON Formatter**: Validate and format JSON output
+- **Regex Generator**: English descriptions → regex patterns
+- **Diff Checker**: Compare prompts/outputs
+- **Markdown Preview**: Render LLM markdown output
+- **Token Estimator**: Calculate costs across models
+- **CSV to JSON**: File upload → JSON conversion
+- **HTML to JSX**: Convert LLM HTML output
+- **Code Minifier**: Optimize code for LLM context
+- **Image OCR**: Extract text from images
+- **YouTube Transcriber**: Video → text transcripts
+- **Chat Exporter**: Export conversations to PDF/Notion
+- **Un-Sanitizer**: Restore masked data in outputs
+
+## 💳 Monetization Model
+
+**Free Tier**: 5 uses/day per tool, basic features
+**Pro Tier**: $9/month - Unlimited usage, advanced features, history, priority support
+
+Uses friction paywalls and workflow continuity to drive conversions rather than hard blocks.
 
 ---
 

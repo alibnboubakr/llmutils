@@ -59,7 +59,7 @@ export default function DashboardPage() {
           Welcome back!
         </h1>
         <p className="text-muted-foreground text-lg">
-          Here's your productivity overview
+          Here&apos;s your productivity overview
         </p>
       </div>
 

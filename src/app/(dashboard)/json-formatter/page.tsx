@@ -24,8 +24,9 @@ export default function JsonFormatterPage() {
       const formatted = JSON.stringify(parsed, null, indent);
       setOutput(formatted);
       setIsValid(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error.message);
       setIsValid(false);
       
       // Try to fix common issues
@@ -41,8 +42,8 @@ export default function JsonFormatterPage() {
         setOutput(formatted);
         setError("Fixed some issues and formatted successfully.");
         setIsValid(true);
-      } catch (fixErr: any) {
-        // Keep original error
+      } catch {
+        // Keep original error if fixing fails
       }
     }
   };
@@ -53,9 +54,10 @@ export default function JsonFormatterPage() {
       JSON.parse(input);
       setIsValid(true);
       setError("");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
       setIsValid(false);
-      setError(err.message);
+      setError(error.message);
     }
   };
 
@@ -70,8 +72,9 @@ export default function JsonFormatterPage() {
       setOutput(minified);
       setIsValid(true);
       setError("");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error.message);
       setIsValid(false);
     }
   };

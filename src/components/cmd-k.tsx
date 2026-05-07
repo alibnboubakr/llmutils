@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { DialogProps } from "@radix-ui/react-dialog";
-import { Calculator, Code2, FileJson, FileText, Globe, History, Home, Key, Settings, Shield } from "lucide-react";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Calculator, Code2, FileJson, FileText, Globe, History, Home, Settings, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

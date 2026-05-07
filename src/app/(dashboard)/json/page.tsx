@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToolStore } from "@/store/use-tool-store";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +36,7 @@ export default function JsonPage() {
       // Simple unstructured to JSON conversion
       // In production, this would call an AI API or more sophisticated parser
       const lines = input.split("\n").filter((line) => line.trim());
-      const result: any = {};
+      const result: Record<string, unknown> = {};
 
       lines.forEach((line, index) => {
         // Try to extract key-value pairs
@@ -57,8 +56,9 @@ export default function JsonPage() {
         output: json,
         timestamp: Date.now(),
       });
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error.message);
     } finally {
       setLoading(false);
     }

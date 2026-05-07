@@ -53,9 +53,10 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ sanitized });
     return addRateLimitHeaders(response, request);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error("Unknown error");
     return NextResponse.json(
-      { error: error.message },
+      { error: err.message },
       { status: 500 }
     );
   }

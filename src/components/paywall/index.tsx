@@ -19,7 +19,7 @@ export function CopyLimitModal({ open, onOpenChange }: CopyLimitModalProps) {
             Daily Copy Limit Reached
           </DialogTitle>
           <DialogDescription>
-            You've hit your daily limit for this tool. Upgrade to Pro for unlimited copies.
+            You&apos;ve hit your daily limit for this tool. Upgrade to Pro for unlimited copies.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

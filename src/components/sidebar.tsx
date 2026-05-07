@@ -8,9 +8,6 @@ import {
   Wrench,
   History,
   Settings,
-  ChevronDown,
-  Menu,
-  X,
   LogOut,
   PanelLeft,
   PanelLeftClose,
@@ -22,9 +19,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/lib/supabase";
 
 type Tool = {
@@ -32,6 +29,7 @@ type Tool = {
   href: string;
   description: string;
   comingSoon?: boolean;
+  category?: string;
 };
 
 const tools: Tool[] = [
