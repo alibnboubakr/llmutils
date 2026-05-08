@@ -8,14 +8,74 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy } from "lucide-react";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type OutputFormat = "pattern" | "js" | "python";
+
+const ALL_FLAGS = ["g", "i", "m", "s", "u", "y"] as const;
+type RegexFlag = (typeof ALL_FLAGS)[number];
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildHighlightedHtml(text: string, pattern: string, flagStr: string): string {
+  if (!pattern) return escapeHtml(text);
+  try {
+    // Ensure we always have "g" so matchAll works
+    const safeFlags = flagStr.includes("g") ? flagStr : flagStr + "g";
+    const re = new RegExp(pattern, safeFlags);
+    let result = "";
+    let lastIndex = 0;
+    for (const m of text.matchAll(re)) {
+      const start = m.index ?? 0;
+      result += escapeHtml(text.slice(lastIndex, start));
+      result += `<mark class="bg-yellow-300 text-black rounded px-0.5">${escapeHtml(m[0])}</mark>`;
+      lastIndex = start + m[0].length;
+      if (m[0].length === 0) lastIndex++; // avoid infinite loop on zero-width matches
+    }
+    result += escapeHtml(text.slice(lastIndex));
+    return result;
+  } catch {
+    return escapeHtml(text);
+  }
+}
 
 export default function RegexPage() {
   const [english, setEnglish] = useState("");
   const [regex, setRegex] = useState("");
-  const [flags, setFlags] = useState("g");
   const [loading, setLoading] = useState(false);
   const [testString, setTestString] = useState("");
   const [matches, setMatches] = useState<string[]>([]);
+
+  // Pro options
+  const [selectedFlags, setSelectedFlags] = useState<Set<RegexFlag>>(
+    new Set(["g", "i"])
+  );
+  const [liveTestText, setLiveTestText] = useState("");
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("pattern");
+
+  const flagStr = ALL_FLAGS.filter((f) => selectedFlags.has(f)).join("");
+
+  const toggleFlag = (flag: RegexFlag) => {
+    setSelectedFlags((prev) => {
+      const next = new Set(prev);
+      if (next.has(flag)) next.delete(flag);
+      else next.add(flag);
+      return next;
+    });
+  };
 
   // Simple English to regex converter (basic patterns)
   const convertToRegex = () => {
@@ -53,7 +113,7 @@ export default function RegexPage() {
 
   const testMatches = (pattern: string) => {
     try {
-      const re = new RegExp(pattern, flags);
+      const re = new RegExp(pattern, flagStr);
       const found = testString.match(re);
       setMatches(found || []);
     } catch {
@@ -61,9 +121,22 @@ export default function RegexPage() {
     }
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(`/${regex}/${flags}`);
+  const getFormattedOutput = () => {
+    if (!regex) return "";
+    if (outputFormat === "js") {
+      return `const re = /${regex}/${flagStr};`;
+    }
+    if (outputFormat === "python") {
+      return `import re\npattern = re.compile(r"${regex}"${flagStr ? `, re.${flagStr.toUpperCase().split("").join(" | re.")}` : ""})`;
+    }
+    return `/${regex}/${flagStr}`;
   };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(getFormattedOutput());
+  };
+
+  const highlightedHtml = buildHighlightedHtml(liveTestText, regex, flagStr);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -87,6 +160,62 @@ export default function RegexPage() {
                 onChange={(e) => setEnglish(e.target.value)}
                 className="min-h-[100px]"
               />
+
+              <ProOptionsPanel
+                title="Regex options"
+                description="Flags, live test, and output format"
+              >
+                <ProField label="Flags" hint="Active flags are applied to the generated regex">
+                  <div className="flex flex-wrap gap-3">
+                    {ALL_FLAGS.map((flag) => (
+                      <label key={flag} className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedFlags.has(flag)}
+                          onChange={() => toggleFlag(flag)}
+                          className="h-4 w-4 rounded border-border accent-primary"
+                        />
+                        <span className="text-sm font-mono">{flag}</span>
+                      </label>
+                    ))}
+                  </div>
+                </ProField>
+
+                <ProField label="Output as">
+                  <Select
+                    value={outputFormat}
+                    onValueChange={(v) => setOutputFormat(v as OutputFormat)}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pattern">Pattern (default)</SelectItem>
+                      <SelectItem value="js">JavaScript snippet</SelectItem>
+                      <SelectItem value="python">Python snippet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </ProField>
+
+                <ProField label="Live test" hint="Type here to see matches highlighted in real-time">
+                  <Textarea
+                    placeholder="Paste text to test against the generated regex…"
+                    value={liveTestText}
+                    onChange={(e) => setLiveTestText(e.target.value)}
+                    className="min-h-[80px] text-sm"
+                  />
+                  {liveTestText && regex && (
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground mb-1">Highlighted matches:</p>
+                      <pre
+                        className="text-sm bg-muted p-3 rounded-md whitespace-pre-wrap font-mono overflow-auto"
+                        dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+                      />
+                    </div>
+                  )}
+                </ProField>
+              </ProOptionsPanel>
+
               <Button
                 onClick={convertToRegex}
                 disabled={loading || !english}
@@ -111,18 +240,16 @@ export default function RegexPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="bg-muted p-4 rounded-md font-mono text-sm">
-                /{regex}/{flags}
+              <div className="bg-muted p-4 rounded-md font-mono text-sm whitespace-pre-wrap">
+                {getFormattedOutput()}
               </div>
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Flags:</p>
                 <Input
-                  value={flags}
-                  onChange={(e) => {
-                    setFlags(e.target.value);
-                    testMatches(regex);
-                  }}
-                  placeholder="g, i, m, etc."
+                  value={flagStr}
+                  readOnly
+                  placeholder="Select flags in Pro options"
+                  className="bg-muted/50"
                 />
               </div>
             </CardContent>

@@ -7,9 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy } from "lucide-react";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // RFC 4180 CSV parser: handles quoted fields, embedded commas/newlines, escaped quotes.
-function parseCsv(text: string): string[][] {
+// delimiter defaults to "," for free-tier behaviour.
+function parseCsv(text: string, delimiter = ","): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -33,9 +42,10 @@ function parseCsv(text: string): string[][] {
 
     if (char === '"') {
       inQuotes = true;
-    } else if (char === ",") {
+    } else if (text.startsWith(delimiter, i)) {
       row.push(field);
       field = "";
+      i += delimiter.length - 1;
     } else if (char === "\n" || char === "\r") {
       // Handle \r\n by skipping the \n that follows \r
       if (char === "\r" && next === "\n") i++;
@@ -76,11 +86,30 @@ function coerceValue(raw: string): unknown {
   return raw;
 }
 
+function isCoercible(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (trimmed === "" || trimmed === "true" || trimmed === "false" || trimmed === "null")
+    return true;
+  if (/^-?\d+$/.test(trimmed) || /^-?\d*\.\d+$/.test(trimmed)) return true;
+  return false;
+}
+
+type DelimiterOption = "," | "\t" | ";" | "|" | "custom";
+type CoercionMode = "loose" | "strict" | "off";
+type EmptyCellMode = "null" | '""' | "skip";
+
 export default function CsvToJsonPage() {
   const [csvData, setCsvData] = useState("");
   const [jsonOutput, setJsonOutput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Pro options
+  const [delimiterOption, setDelimiterOption] = useState<DelimiterOption>(",");
+  const [customDelimiter, setCustomDelimiter] = useState("");
+  const [firstRowIsHeader, setFirstRowIsHeader] = useState(true);
+  const [coercionMode, setCoercionMode] = useState<CoercionMode>("loose");
+  const [emptyCellMode, setEmptyCellMode] = useState<EmptyCellMode>('""');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,21 +129,102 @@ export default function CsvToJsonPage() {
     setError(null);
 
     try {
-      const rows = parseCsv(csvData);
-      if (rows.length < 2) {
-        throw new Error("CSV must have a header row and at least one data row");
-      }
+      const delim =
+        delimiterOption === "custom"
+          ? customDelimiter.slice(0, 1) || ","
+          : delimiterOption;
 
-      const headers = rows[0].map((h) => h.trim());
-      const result = rows.slice(1).map((row) => {
-        const obj: Record<string, unknown> = {};
-        headers.forEach((header, index) => {
-          obj[header] = coerceValue(row[index] ?? "");
+      const rows = parseCsv(csvData, delim);
+
+      if (firstRowIsHeader) {
+        if (rows.length < 2) {
+          throw new Error(
+            "CSV must have a header row and at least one data row"
+          );
+        }
+
+        const headers = rows[0].map((h) => h.trim());
+        const dataRows = rows.slice(1);
+
+        // Build coercibility map per column index for "strict" mode
+        const colCoercible: boolean[] = headers.map((_, colIdx) =>
+          dataRows.every((row) => isCoercible(row[colIdx] ?? ""))
+        );
+
+        const result = dataRows.map((row) => {
+          const obj: Record<string, unknown> = {};
+          headers.forEach((header, index) => {
+            const raw = row[index] ?? "";
+            const trimmed = raw.trim();
+
+            // Empty cell handling
+            if (trimmed === "") {
+              if (emptyCellMode === "skip") return;
+              if (emptyCellMode === "null") {
+                obj[header] = null;
+                return;
+              }
+              // emptyCellMode === '""'
+              obj[header] = "";
+              return;
+            }
+
+            // Coercion
+            if (coercionMode === "off") {
+              obj[header] = raw;
+            } else if (coercionMode === "strict") {
+              obj[header] = colCoercible[index] ? coerceValue(raw) : raw;
+            } else {
+              // loose
+              obj[header] = coerceValue(raw);
+            }
+          });
+          return obj;
         });
-        return obj;
-      });
 
-      setJsonOutput(JSON.stringify(result, null, 2));
+        setJsonOutput(JSON.stringify(result, null, 2));
+      } else {
+        // No header row — use col_1, col_2, ...
+        if (rows.length < 1) {
+          throw new Error("CSV has no data rows");
+        }
+
+        const colCount = Math.max(...rows.map((r) => r.length));
+        const headers = Array.from({ length: colCount }, (_, i) => `col_${i + 1}`);
+
+        const colCoercible: boolean[] = headers.map((_, colIdx) =>
+          rows.every((row) => isCoercible(row[colIdx] ?? ""))
+        );
+
+        const result = rows.map((row) => {
+          const obj: Record<string, unknown> = {};
+          headers.forEach((header, index) => {
+            const raw = row[index] ?? "";
+            const trimmed = raw.trim();
+
+            if (trimmed === "") {
+              if (emptyCellMode === "skip") return;
+              if (emptyCellMode === "null") {
+                obj[header] = null;
+                return;
+              }
+              obj[header] = "";
+              return;
+            }
+
+            if (coercionMode === "off") {
+              obj[header] = raw;
+            } else if (coercionMode === "strict") {
+              obj[header] = colCoercible[index] ? coerceValue(raw) : raw;
+            } else {
+              obj[header] = coerceValue(raw);
+            }
+          });
+          return obj;
+        });
+
+        setJsonOutput(JSON.stringify(result, null, 2));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to parse CSV");
     } finally {
@@ -155,6 +265,91 @@ export default function CsvToJsonPage() {
                 {csvData.length > 500 && "..."}
               </pre>
             )}
+
+            <ProOptionsPanel
+              title="Parser options"
+              description="Delimiter, headers, type coercion, and empty-cell handling"
+            >
+              <ProField label="Delimiter">
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={delimiterOption}
+                    onValueChange={(v) => setDelimiterOption(v as DelimiterOption)}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value=",">, (comma)</SelectItem>
+                      <SelectItem value={"\t"}>⇥ (tab)</SelectItem>
+                      <SelectItem value=";">; (semicolon)</SelectItem>
+                      <SelectItem value="|">| (pipe)</SelectItem>
+                      <SelectItem value="custom">Custom…</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {delimiterOption === "custom" && (
+                    <Input
+                      value={customDelimiter}
+                      onChange={(e) => setCustomDelimiter(e.target.value.slice(0, 1))}
+                      placeholder="1 char"
+                      className="w-20"
+                      maxLength={1}
+                    />
+                  )}
+                </div>
+              </ProField>
+
+              <ProField label="First row is header">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={firstRowIsHeader}
+                    onChange={(e) => setFirstRowIsHeader(e.target.checked)}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                  />
+                  <span className="text-sm">Use first row as field names (when off, keys become col_1, col_2, …)</span>
+                </label>
+              </ProField>
+
+              <ProField label="Type coercion" hint="Controls how cell values are typed in the JSON output">
+                <div className="flex flex-col gap-1.5">
+                  {(["loose", "strict", "off"] as CoercionMode[]).map((mode) => (
+                    <label key={mode} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="coercion"
+                        value={mode}
+                        checked={coercionMode === mode}
+                        onChange={() => setCoercionMode(mode)}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">
+                        {mode === "loose" && "Loose — coerce each cell independently (default)"}
+                        {mode === "strict" && "Strict — only coerce if every cell in a column is coercible"}
+                        {mode === "off" && "Off — always strings"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </ProField>
+
+              <ProField label="Empty cells">
+                <Select
+                  value={emptyCellMode}
+                  onValueChange={(v) => setEmptyCellMode(v as EmptyCellMode)}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='""'>Empty string "" (default)</SelectItem>
+                    <SelectItem value="null">null</SelectItem>
+                    <SelectItem value="skip">Skip key entirely</SelectItem>
+                  </SelectContent>
+                </Select>
+              </ProField>
+            </ProOptionsPanel>
+
             <Button
               onClick={convertCsvToJson}
               disabled={loading || !csvData}

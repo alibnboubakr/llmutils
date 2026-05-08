@@ -12,6 +12,33 @@ import { Badge } from "@/components/ui/badge";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Copy, Loader2, Upload, Trash2 } from "lucide-react";
 import { useTrackUsage } from "@/lib/use-track-usage";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type OcrLanguage =
+  | "eng" | "spa" | "fra" | "deu" | "ita" | "por"
+  | "nld" | "jpn" | "chi_sim" | "kor" | "ara" | "rus";
+
+const OCR_LANGUAGES: { value: OcrLanguage; label: string }[] = [
+  { value: "eng", label: "English" },
+  { value: "spa", label: "Spanish" },
+  { value: "fra", label: "French" },
+  { value: "deu", label: "German" },
+  { value: "ita", label: "Italian" },
+  { value: "por", label: "Portuguese" },
+  { value: "nld", label: "Dutch" },
+  { value: "jpn", label: "Japanese" },
+  { value: "chi_sim", label: "Chinese (Simplified)" },
+  { value: "kor", label: "Korean" },
+  { value: "ara", label: "Arabic" },
+  { value: "rus", label: "Russian" },
+];
 
 export default function ImageOcrPage() {
   const trackUsage = useTrackUsage("image-ocr");
@@ -23,11 +50,35 @@ export default function ImageOcrPage() {
   const [error, setError] = React.useState<string | null>(null);
   const fileRef = React.useRef<HTMLInputElement>(null);
 
+  // Pro options
+  const [ocrLanguage, setOcrLanguage] = React.useState<OcrLanguage>("eng");
+  const [autoTrim, setAutoTrim] = React.useState(true);
+  const [lowercase, setLowercase] = React.useState(false);
+  const [collapseToSingleLine, setCollapseToSingleLine] = React.useState(false);
+
   React.useEffect(() => {
     return () => {
       if (imageUrl) URL.revokeObjectURL(imageUrl);
     };
   }, [imageUrl]);
+
+  function applyPostProcessing(raw: string): string {
+    let result = raw;
+    if (autoTrim) {
+      result = result
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .join("\n");
+    }
+    if (lowercase) {
+      result = result.toLowerCase();
+    }
+    if (collapseToSingleLine) {
+      result = result.replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
+    }
+    return result;
+  }
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -46,7 +97,7 @@ export default function ImageOcrPage() {
 
     try {
       const Tesseract = (await import("tesseract.js")).default;
-      const { data } = await Tesseract.recognize(file, "eng", {
+      const { data } = await Tesseract.recognize(file, ocrLanguage, {
         logger: (m) => {
           if (typeof m.progress === "number") {
             setProgress(Math.round(m.progress * 100));
@@ -54,7 +105,8 @@ export default function ImageOcrPage() {
           if (m.status) setStatus(m.status);
         },
       });
-      setText(data.text.trim());
+      const processed = applyPostProcessing(data.text.trim());
+      setText(processed);
       setStatus("Done");
       void trackUsage();
     } catch (e) {
@@ -141,6 +193,73 @@ export default function ImageOcrPage() {
                 </div>
               </div>
             )}
+
+            <div className="mt-4">
+              <ProOptionsPanel
+                title="OCR options"
+                description="Control language detection and output post-processing."
+              >
+                <ProField label="Language" hint="The language of text in the image.">
+                  <Select
+                    value={ocrLanguage}
+                    onValueChange={(v) => setOcrLanguage(v as OcrLanguage)}
+                  >
+                    <SelectTrigger className="w-56">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {OCR_LANGUAGES.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ProField>
+
+                <ProField
+                  label="Auto-trim"
+                  hint="Trim each line and drop blank lines from the result."
+                >
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoTrim}
+                      onChange={(e) => setAutoTrim(e.target.checked)}
+                      className="accent-primary"
+                    />
+                    Trim lines and remove blanks
+                  </label>
+                </ProField>
+
+                <ProField label="Lowercase" hint="Convert all extracted text to lowercase.">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={lowercase}
+                      onChange={(e) => setLowercase(e.target.checked)}
+                      className="accent-primary"
+                    />
+                    Convert to lowercase
+                  </label>
+                </ProField>
+
+                <ProField
+                  label="Collapse to single line"
+                  hint="Replace newlines with spaces and collapse extra whitespace."
+                >
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={collapseToSingleLine}
+                      onChange={(e) => setCollapseToSingleLine(e.target.checked)}
+                      className="accent-primary"
+                    />
+                    Collapse to one line
+                  </label>
+                </ProField>
+              </ProOptionsPanel>
+            </div>
 
             {loading && (
               <div className="mt-4 space-y-2">

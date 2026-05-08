@@ -24,6 +24,7 @@ type UsageResponse = {
 export default function SettingsPage() {
   const router = useRouter();
   const [email, setEmail] = React.useState<string>("");
+  const [username, setUsername] = React.useState<string>("");
   const [createdAt, setCreatedAt] = React.useState<string>("");
   const [upgrading, setUpgrading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -34,6 +35,10 @@ export default function SettingsPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setEmail(user.email ?? "");
+        const meta = user.user_metadata as
+          | { username?: string; full_name?: string }
+          | undefined;
+        setUsername(meta?.username || meta?.full_name || "");
         if (user.created_at) {
           setCreatedAt(
             new Date(user.created_at).toLocaleDateString(undefined, {
@@ -126,11 +131,27 @@ export default function SettingsPage() {
             <ul className="space-y-2 mb-6">
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-500" />
-                {isPro ? "Unlimited uses" : "5 uses per tool, per day"}
+                {isPro ? "Unlimited uses" : `${limit} uses per tool, per day`}
               </li>
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-500" />
                 Standard copy / paste
+              </li>
+              <li
+                className={
+                  isPro
+                    ? "flex items-center gap-2"
+                    : "flex items-center gap-2 text-muted-foreground"
+                }
+              >
+                <Check
+                  className={
+                    isPro ? "h-4 w-4 text-green-500" : "h-4 w-4"
+                  }
+                />
+                <span className={isPro ? "" : "line-through"}>
+                  Fine-tuning options on every tool
+                </span>
               </li>
               <li
                 className={
@@ -227,6 +248,12 @@ export default function SettingsPage() {
         <h2 className="text-xl font-semibold mb-4">Account</h2>
         <Card>
           <CardContent className="pt-6 space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-1">Username</p>
+              <p className="text-sm text-muted-foreground">
+                {username || "—"}
+              </p>
+            </div>
             <div>
               <p className="text-sm font-medium mb-1">Email</p>
               <p className="text-sm text-muted-foreground">{email || "—"}</p>

@@ -13,12 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GoogleIcon } from "@/components/google-icon";
 
 export function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
 
+  const [username, setUsername] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -29,12 +31,20 @@ export function SignupForm() {
     e.preventDefault();
     setError(null);
     setInfo(null);
+    if (username.trim().length < 2) {
+      setError("Pick a username with at least 2 characters.");
+      return;
+    }
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
+        data: {
+          username: username.trim(),
+          full_name: username.trim(),
+        },
       },
     });
     setLoading(false);
@@ -62,15 +72,41 @@ export function SignupForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
-        <CardTitle>Create your account</CardTitle>
+        <CardTitle className="text-2xl">Create your account</CardTitle>
         <CardDescription>
           Free forever. Upgrade when you&apos;re ready.
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={onGoogle}
+        >
+          <GoogleIcon className="h-4 w-4" />
+          Sign up with Google
+        </Button>
+
+        <div className="my-4 flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="h-px flex-1 bg-border" />
+          OR
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
         <form onSubmit={onSubmit} className="space-y-4">
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            minLength={2}
+            maxLength={32}
+          />
           <Input
             type="email"
             placeholder="you@example.com"
@@ -91,24 +127,9 @@ export function SignupForm() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           {info && <p className="text-sm text-muted-foreground">{info}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Sign up"}
+            {loading ? "Creating account…" : "Create account"}
           </Button>
         </form>
-
-        <div className="my-4 flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="h-px flex-1 bg-border" />
-          OR
-          <div className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={onGoogle}
-        >
-          Continue with Google
-        </Button>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}

@@ -52,48 +52,48 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-5xl">
       {/* Header with gradient */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-extrabold mb-2">
           Your AI workflow dashboard
         </h1>
-        <p className="text-muted-foreground text-lg">
+        <p className="text-muted-foreground text-base md:text-lg">
           Instant access to tools for writers, makers, marketers, and teams.
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-12">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-8 md:mb-12">
         {stats.map((stat, i) => (
           <Card key={i} className="hover:shadow-md transition-all hover:-translate-y-0.5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <stat.icon className="h-5 w-5 text-primary" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 mb-2 sm:mb-3">
+                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
               </div>
-              <p className="text-3xl font-bold">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+              <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Quick Actions</h2>
+      <section className="mb-8 md:mb-12">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold">Quick Actions</h2>
           <Link href="/history">
             <Button variant="ghost" size="sm">
               View All <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
           {recentTools.map((tool) => (
             <Link key={tool.href} href={tool.href} className="group">
-              <Card className="hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+              <Card className="hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 h-full">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <tool.icon className="h-6 w-6 text-primary" />

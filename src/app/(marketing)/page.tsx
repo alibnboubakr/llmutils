@@ -332,6 +332,14 @@ export default async function LandingPage() {
                         <Check className="h-4 w-4 text-green-500" />
                       </div>
                       <span>
+                        <strong className="text-foreground">Fine-tuning options</strong> on every tool
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="h-4 w-4 text-green-500" />
+                      </div>
+                      <span>
                         <strong className="text-foreground">Pipeline Continuity</strong> — chain tools
                       </span>
                     </li>

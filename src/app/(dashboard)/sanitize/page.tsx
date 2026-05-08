@@ -9,9 +9,104 @@ import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
 
 // Force dynamic rendering to avoid SSR issues with Zustand
 export const dynamic = 'force-dynamic';
+
+type MaskStyle = "***" | "[REDACTED]" | "[XXXX-XXXX]" | "hash";
+
+type Categories = {
+  email: boolean;
+  phone: boolean;
+  api_key: boolean;
+  credit_card: boolean;
+  ip: boolean;
+};
+
+function djb2Hash(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0").slice(0, 8);
+}
+
+function buildReplacement(matched: string, style: MaskStyle, preserveLength: boolean): string {
+  if (style === "***") {
+    return preserveLength ? "*".repeat(matched.length) : "***";
+  }
+  if (style === "[REDACTED]") return "[REDACTED]";
+  if (style === "[XXXX-XXXX]") {
+    return matched.replace(/[a-zA-Z0-9]/g, "X");
+  }
+  if (style === "hash") {
+    return `[h:${djb2Hash(matched)}]`;
+  }
+  return "***";
+}
+
+function maskPII(
+  text: string,
+  maskStyle: MaskStyle,
+  preserveLength: boolean,
+  categories: Categories,
+  customPatterns: string
+): string {
+  let masked = text;
+
+  const replace = (regex: RegExp) => {
+    masked = masked.replace(regex, (m) => buildReplacement(m, maskStyle, preserveLength));
+  };
+
+  // api_key category
+  if (categories.api_key) {
+    replace(/sk-[a-zA-Z0-9]{32,}/g);
+    replace(/pk-[a-zA-Z0-9]{32,}/g);
+    replace(/api[_-]?key[_-]?[a-zA-Z0-9]{16,}/gi);
+  }
+
+  // email category
+  if (categories.email) {
+    replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+  }
+
+  // phone category
+  if (categories.phone) {
+    replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3,4}[-.\s]?\d{4}/g);
+  }
+
+  // credit_card category
+  if (categories.credit_card) {
+    replace(/\b(?:\d[ -]?){13,19}\b/g);
+  }
+
+  // ip category
+  if (categories.ip) {
+    replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g);
+  }
+
+  // Custom patterns
+  if (customPatterns.trim()) {
+    const lines = customPatterns.split("\n").map((l) => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      try {
+        let regex: RegExp;
+        const flagMatch = line.match(/^\/(.+)\/([gimsuy]*)$/);
+        if (flagMatch) {
+          regex = new RegExp(flagMatch[1], flagMatch[2] || "g");
+        } else {
+          regex = new RegExp(line, "g");
+        }
+        replace(regex);
+      } catch {
+        // Invalid regex — skip silently
+      }
+    }
+  }
+
+  return masked;
+}
 
 export default function SanitizePage() {
   const [input, setInput] = useState("");
@@ -20,25 +115,20 @@ export default function SanitizePage() {
   const { addToHistory, setPipelineOutput } = useToolStore();
   const router = useRouter();
 
-  const maskPII = (text: string): string => {
-    // Mask API keys (OpenAI, Anthropic, etc.)
-    let masked = text.replace(/sk-[a-zA-Z0-9]{32,}/g, "sk-***MASKED***");
-    masked = masked.replace(/pk-[a-zA-Z0-9]{32,}/g, "pk-***MASKED***");
-    masked = masked.replace(/api[_-]?key[_-]?[a-zA-Z0-9]{16,}/gi, "api_key_***MASKED***");
+  // Pro options state
+  const [maskStyle, setMaskStyle] = useState<MaskStyle>("***");
+  const [preserveLength, setPreserveLength] = useState(false);
+  const [customPatterns, setCustomPatterns] = useState("");
+  const [categories, setCategories] = useState<Categories>({
+    email: true,
+    phone: true,
+    api_key: true,
+    credit_card: true,
+    ip: true,
+  });
 
-    // Mask emails
-    masked = masked.replace(
-      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-      "***EMAIL_MASKED***"
-    );
-
-    // Mask phone numbers (simple pattern)
-    masked = masked.replace(
-      /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3,4}[-.\s]?\d{4}/g,
-      "***PHONE_MASKED***"
-    );
-
-    return masked;
+  const toggleCategory = (key: keyof Categories) => {
+    setCategories((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSanitize = () => {
@@ -47,7 +137,7 @@ export default function SanitizePage() {
 
     // Simulate processing delay
     setTimeout(() => {
-      const sanitized = maskPII(input);
+      const sanitized = maskPII(input, maskStyle, preserveLength, categories, customPatterns);
       setOutput(sanitized);
       addToHistory({
         tool: "sanitize",
@@ -89,6 +179,63 @@ export default function SanitizePage() {
               onChange={(e) => setInput(e.target.value)}
               className="min-h-[300px]"
             />
+
+            <ProOptionsPanel
+              title="Fine-tune masking"
+              description="Custom mask style, categories, and extra patterns"
+              className="mt-4"
+            >
+              <ProField label="Mask style">
+                <select
+                  value={maskStyle}
+                  onChange={(e) => setMaskStyle(e.target.value as MaskStyle)}
+                  className="w-full rounded-md border bg-background px-3 py-1.5 text-sm"
+                >
+                  <option value="***">*** (default)</option>
+                  <option value="[REDACTED]">[REDACTED]</option>
+                  <option value="[XXXX-XXXX]">[XXXX-XXXX] (preserve length)</option>
+                  <option value="hash">hash (8-char hex)</option>
+                </select>
+              </ProField>
+
+              <ProField label="Preserve length" hint="Replace each character with * (only applies to *** style)">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={preserveLength}
+                    onChange={(e) => setPreserveLength(e.target.checked)}
+                    className="h-4 w-4 rounded border accent-primary"
+                  />
+                  Match masked length to original
+                </label>
+              </ProField>
+
+              <ProField label="Categories" hint="Disable to skip masking that category">
+                <div className="grid grid-cols-2 gap-1.5">
+                  {(Object.keys(categories) as (keyof Categories)[]).map((cat) => (
+                    <label key={cat} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={categories[cat]}
+                        onChange={() => toggleCategory(cat)}
+                        className="h-4 w-4 rounded border accent-primary"
+                      />
+                      {cat.replace("_", " ")}
+                    </label>
+                  ))}
+                </div>
+              </ProField>
+
+              <ProField label="Custom patterns" hint="One JS regex per line. Use /pattern/flags or plain text.">
+                <Textarea
+                  placeholder={"/my-secret-\\w+/g\nCONFIDENTIAL"}
+                  value={customPatterns}
+                  onChange={(e) => setCustomPatterns(e.target.value)}
+                  className="min-h-[80px] font-mono text-xs"
+                />
+              </ProField>
+            </ProOptionsPanel>
+
             <Button
               onClick={handleSanitize}
               disabled={loading || !input}

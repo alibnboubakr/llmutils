@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Copy, RefreshCw } from "lucide-react";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
 
 export default function UnSanitizerPage() {
   const [input, setInput] = useState("");
@@ -22,14 +23,57 @@ export default function UnSanitizerPage() {
     { placeholder: "api_key_***MASKED***", original: "" },
   ]);
 
+  // Pro options state
+  const [bulkMappings, setBulkMappings] = useState("");
+  const [caseInsensitive, setCaseInsensitive] = useState(false);
+  const [treatKeysAsRegex, setTreatKeysAsRegex] = useState(false);
+
   const handleUnSanitize = () => {
     if (!input) return;
 
+    // Parse bulk mappings textarea
+    const bulkParsed: { placeholder: string; original: string }[] = [];
+    if (bulkMappings.trim()) {
+      for (const line of bulkMappings.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx === -1) continue;
+        bulkParsed.push({
+          placeholder: trimmed.slice(0, eqIdx),
+          original: trimmed.slice(eqIdx + 1),
+        });
+      }
+    }
+
+    // Merge: existing replacements first, then bulk (bulk can override)
+    const allReplacements = [...replacements, ...bulkParsed];
+
     let result = input;
 
-    // Apply all replacements
-    replacements.forEach(({ placeholder, original }) => {
-      if (original) {
+    allReplacements.forEach(({ placeholder, original }) => {
+      if (!placeholder || !original) return;
+
+      if (treatKeysAsRegex) {
+        try {
+          const flags = caseInsensitive ? "gi" : "g";
+          const regex = new RegExp(placeholder, flags);
+          result = result.replace(regex, original);
+        } catch {
+          // Invalid regex — fall back to literal
+          result = result.split(placeholder).join(original);
+        }
+      } else if (caseInsensitive) {
+        // Case-insensitive literal replacement
+        const flags = "gi";
+        try {
+          const escaped = placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(escaped, flags);
+          result = result.replace(regex, original);
+        } catch {
+          result = result.split(placeholder).join(original);
+        }
+      } else {
         result = result.split(placeholder).join(original);
       }
     });
@@ -131,9 +175,47 @@ export default function UnSanitizerPage() {
               ))}
             </div>
 
+            <ProOptionsPanel
+              title="Advanced replacement"
+              description="Bulk mappings, regex keys, case-insensitive match"
+              className="mt-4"
+            >
+              <ProField label="Bulk mappings" hint="One placeholder=original per line">
+                <Textarea
+                  placeholder={"***EMAIL_MASKED***=alice@example.com\n***PHONE_MASKED***=555-1234"}
+                  value={bulkMappings}
+                  onChange={(e) => setBulkMappings(e.target.value)}
+                  className="min-h-[100px] font-mono text-xs"
+                />
+              </ProField>
+
+              <ProField label="Match options">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={caseInsensitive}
+                      onChange={(e) => setCaseInsensitive(e.target.checked)}
+                      className="h-4 w-4 rounded border accent-primary"
+                    />
+                    Case-insensitive match
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={treatKeysAsRegex}
+                      onChange={(e) => setTreatKeysAsRegex(e.target.checked)}
+                      className="h-4 w-4 rounded border accent-primary"
+                    />
+                    Treat keys as regex patterns
+                  </label>
+                </div>
+              </ProField>
+            </ProOptionsPanel>
+
             <Button
               onClick={handleUnSanitize}
-              disabled={!input || replacements.every((r) => !r.original)}
+              disabled={!input || (replacements.every((r) => !r.original) && !bulkMappings.trim())}
               className="w-full mt-4"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -162,7 +244,7 @@ export default function UnSanitizerPage() {
 
       <ToolUsageTip />
 
-<div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
+      <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
         <Badge variant="secondary">Free: 10 uses/day</Badge>
         <span>Upgrade to Pro for unlimited un-sanitization</span>
       </div>

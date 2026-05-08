@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
 
 // Token pricing per 1K tokens (as of 2026)
 const MODEL_PRICING: Record<string, { input: number; output: number; context: number }> = {
@@ -17,6 +18,19 @@ const MODEL_PRICING: Record<string, { input: number; output: number; context: nu
   "claude-3-haiku": { input: 0.00025, output: 0.00125, context: 200000 },
 };
 
+// Pro multi-model pricing ($/1M tokens, Q4-2025 approximate)
+const PRO_MODEL_PRICING: Record<string, { label: string; inputPerM: number; outputPerM: number }> = {
+  "gpt-4o":          { label: "GPT-4o",           inputPerM: 5.00,  outputPerM: 15.00 },
+  "gpt-4":           { label: "GPT-4",             inputPerM: 30.00, outputPerM: 60.00 },
+  "gpt-3.5":         { label: "GPT-3.5 Turbo",     inputPerM: 0.50,  outputPerM: 1.50  },
+  "claude-sonnet":   { label: "Claude Sonnet",     inputPerM: 3.00,  outputPerM: 15.00 },
+  "claude-haiku":    { label: "Claude Haiku",      inputPerM: 0.25,  outputPerM: 1.25  },
+  "gemini-1.5-pro":  { label: "Gemini 1.5 Pro",   inputPerM: 3.50,  outputPerM: 10.50 },
+};
+
+const ALL_PRO_MODEL_KEYS = Object.keys(PRO_MODEL_PRICING);
+const DEFAULT_PRO_MODELS = ["gpt-4o", "claude-sonnet"];
+
 // Simple token estimation (roughly 4 chars per token for English)
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / 4);
@@ -27,6 +41,11 @@ export default function TokenEstimatorPage() {
   const [model, setModel] = useState("gpt-4o");
   const [outputTokens, setOutputTokens] = useState(500);
 
+  // Pro options
+  const [selectedProModels, setSelectedProModels] = useState<string[]>(DEFAULT_PRO_MODELS);
+  const [perParagraph, setPerParagraph] = useState(false);
+  const [outputMultiplier, setOutputMultiplier] = useState(1);
+
   const inputTokens = estimateTokens(text);
   const pricing = MODEL_PRICING[model];
   const contextWindow = pricing?.context || 128000;
@@ -36,6 +55,28 @@ export default function TokenEstimatorPage() {
   const totalCost = inputCost + outputCost;
 
   const percentUsed = (inputTokens / contextWindow) * 100;
+
+  function toggleProModel(key: string) {
+    setSelectedProModels((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  }
+
+  // Paragraph breakdown
+  const paragraphs = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  // Pro model comparison rows
+  const proModelRows = selectedProModels.map((key) => {
+    const m = PRO_MODEL_PRICING[key];
+    const estInput = inputTokens;
+    const estOutput = Math.round(inputTokens * outputMultiplier);
+    const inputCostM = (estInput / 1_000_000) * m.inputPerM;
+    const outputCostM = (estOutput / 1_000_000) * m.outputPerM;
+    return { key, label: m.label, estInput, estOutput, totalCost: inputCostM + outputCostM };
+  });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -58,7 +99,7 @@ export default function TokenEstimatorPage() {
               onChange={(e) => setText(e.target.value)}
               className="min-h-[300px] mb-4"
             />
-            
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">Model</label>
@@ -90,6 +131,56 @@ export default function TokenEstimatorPage() {
                   className="w-full"
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <ProOptionsPanel
+                title="Multi-model comparison"
+                description="Compare costs across models with richer breakdown options."
+              >
+                <ProField label="Models to compare">
+                  <div className="grid grid-cols-2 gap-2">
+                    {ALL_PRO_MODEL_KEYS.map((key) => (
+                      <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedProModels.includes(key)}
+                          onChange={() => toggleProModel(key)}
+                          className="accent-primary"
+                        />
+                        {PRO_MODEL_PRICING[key].label}
+                      </label>
+                    ))}
+                  </div>
+                </ProField>
+
+                <ProField
+                  label="Output multiplier"
+                  hint="Assumed output : input token ratio for cost estimate (default 1×)."
+                >
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={10}
+                    step={0.5}
+                    value={outputMultiplier}
+                    onChange={(e) => setOutputMultiplier(Number(e.target.value))}
+                    className="w-24 rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </ProField>
+
+                <ProField label="Per-paragraph breakdown">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={perParagraph}
+                      onChange={(e) => setPerParagraph(e.target.checked)}
+                      className="accent-primary"
+                    />
+                    Show token count per paragraph
+                  </label>
+                </ProField>
+              </ProOptionsPanel>
             </div>
           </CardContent>
         </Card>
@@ -174,6 +265,73 @@ export default function TokenEstimatorPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Pro: Multi-model comparison table */}
+      {selectedProModels.length > 0 && text.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Multi-model comparison</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-muted-foreground text-xs uppercase tracking-wider">
+                    <th className="text-left py-2 pr-4">Model</th>
+                    <th className="text-right py-2 pr-4">Est. Input Tokens</th>
+                    <th className="text-right py-2 pr-4">Est. Output Tokens</th>
+                    <th className="text-right py-2">Total Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proModelRows.map((row) => (
+                    <tr key={row.key} className="border-b last:border-0">
+                      <td className="py-2 pr-4 font-medium">{row.label}</td>
+                      <td className="text-right py-2 pr-4 font-mono">{row.estInput.toLocaleString()}</td>
+                      <td className="text-right py-2 pr-4 font-mono">{row.estOutput.toLocaleString()}</td>
+                      <td className="text-right py-2 font-mono text-primary">${row.totalCost.toFixed(5)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Output tokens = input × {outputMultiplier}× multiplier. Prices approximate Q4 2025.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pro: Per-paragraph breakdown */}
+      {perParagraph && text.length > 0 && paragraphs.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Per-paragraph breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-muted-foreground text-xs uppercase tracking-wider">
+                    <th className="text-left py-2 pr-4">#</th>
+                    <th className="text-right py-2 pr-4">Chars</th>
+                    <th className="text-right py-2">Est. Tokens</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paragraphs.map((p, i) => (
+                    <tr key={i} className="border-b last:border-0">
+                      <td className="py-2 pr-4 text-muted-foreground">{i + 1}</td>
+                      <td className="text-right py-2 pr-4 font-mono">{p.length.toLocaleString()}</td>
+                      <td className="text-right py-2 font-mono">{estimateTokens(p).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ToolUsageTip />
 
