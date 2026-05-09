@@ -30,6 +30,8 @@ export const PRO_MONTHLY_PRICE_ID =
   process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? "";
 export const PRO_YEARLY_PRICE_ID =
   process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? "";
+export const TEAM_MONTHLY_PRICE_ID =
+  process.env.STRIPE_TEAM_MONTHLY_PRICE_ID ?? "";
 
 export async function createCheckoutSession({
   customerId,

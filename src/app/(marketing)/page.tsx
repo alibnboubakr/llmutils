@@ -14,11 +14,12 @@ import {
   ArrowRight,
   Check,
   Zap,
-  Code2,
   GitCompare,
   Sparkles,
   Rocket,
-  Terminal,
+  Hash,
+  Download,
+  Users,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
@@ -29,38 +30,44 @@ const tools = [
   {
     icon: Globe,
     title: "Web → Markdown",
-    description: "Paste any URL and get clean, LLM-ready markdown.",
+    description: "Paste any URL and get clean, LLM-ready markdown in one click.",
     href: "/markdown",
   },
   {
     icon: Shield,
-    title: "Context Sanitizer",
-    description: "Strip API keys, emails, and PII from prompts automatically.",
+    title: "PII Sanitizer",
+    description: "Strip API keys, emails, and PII before they reach the model.",
     href: "/sanitize",
-  },
-  {
-    icon: Braces,
-    title: "Text → JSON",
-    description: "Turn unstructured text into structured JSON with a schema.",
-    href: "/json",
-  },
-  {
-    icon: Code2,
-    title: "JSON Formatter",
-    description: "Format, validate, and minify JSON. Repairs trailing commas.",
-    href: "/json-formatter",
-  },
-  {
-    icon: GitCompare,
-    title: "Prompt Diff",
-    description: "Compare two prompt versions side-by-side, line-by-line.",
-    href: "/diff",
   },
   {
     icon: Zap,
     title: "Token Estimator",
-    description: "Estimate token counts and API cost before you call.",
+    description: "See the cost before you send — across GPT-4o, Claude, and Gemini.",
     href: "/token-estimator",
+  },
+  {
+    icon: GitCompare,
+    title: "Prompt Diff",
+    description: "A/B compare prompt versions word-by-word. Ship better prompts faster.",
+    href: "/diff",
+  },
+  {
+    icon: Download,
+    title: "Chat Exporter",
+    description: "Export AI conversations to Markdown or PDF with one click.",
+    href: "/chat-exporter",
+  },
+  {
+    icon: Braces,
+    title: "Text → JSON",
+    description: "Turn unstructured AI output into structured JSON with a schema hint.",
+    href: "/json",
+  },
+  {
+    icon: Hash,
+    title: "English → Regex",
+    description: "Describe the pattern you need in plain English, get the regex.",
+    href: "/regex",
   },
 ];
 
@@ -77,7 +84,7 @@ export default async function LandingPage() {
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground text-xs font-bold">L</span>
+              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
             <span className="font-semibold">LLMUtils</span>
           </Link>
@@ -95,7 +102,7 @@ export default async function LandingPage() {
                   <Button variant="ghost">Log in</Button>
                 </Link>
                 <Link href="/signup">
-                  <Button>Sign up free</Button>
+                  <Button>Try for free</Button>
                 </Link>
               </>
             )}
@@ -104,119 +111,92 @@ export default async function LandingPage() {
       </header>
 
       <main className="flex-1 relative">
-        <section className="relative overflow-hidden py-20 md:py-32">
+        {/* Hero */}
+        <section className="relative overflow-hidden py-24 md:py-36">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background" />
-          <div className="container mx-auto px-4 text-center relative z-20">
-            {/* Animated badge */}
+          <div className="container mx-auto px-4 text-center relative z-20 max-w-4xl">
             <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground mb-8 shadow-sm">
-              <Terminal className="h-4 w-4 text-primary animate-pulse" />
-              <span className="font-medium">Built for anyone using LLMs</span>
-              <span className="text-primary">•</span>
-              <span>Fast, private, copy-paste ready</span>
+              <Shield className="h-3.5 w-3.5 text-primary" />
+              <span>Stop leaking PII. Stop burning tokens blindly. Stop losing your best prompts.</span>
             </div>
-            
-            {/* Main heading with gradient */}
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 max-w-4xl mx-auto leading-[1.1]">
-              The{" "}
-              <span className="relative">
-                <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent">
-                  missing toolbox
-                </span>
-                <div className="absolute -bottom-2 left-0 right-0 h-3 bg-primary/10 -skew-y--3 -z-10" />
+
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 leading-[1.05]">
+              The missing layer<br />
+              <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent">
+                between you and the model
               </span>
-              {" "}for everyone using LLMs
             </h1>
-            
-            {/* Subheading */}
-            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
-              Stop wrestling with context, formats, and AI output. 
-              <span className="text-foreground font-medium">Build cleaner prompts and smarter workflows</span>
-              {" "}with focused, single-purpose tools designed for teams, creators, and sellers.
+
+            <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+              Seven sharp tools that clean your context, estimate your cost, protect your data,
+              and save your best work — before it hits the AI.
             </p>
-            
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-4 justify-center mb-8">
+
+            <div className="flex flex-wrap gap-4 justify-center mb-10">
               <Link href={signedIn ? "/dashboard" : "/signup"}>
-                <Button size="lg" className="text-lg px-8 py-6 shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all hover:scale-105">
-                  {signedIn ? "Open Dashboard" : "Get Started Free"}
+                <Button size="lg" className="text-base px-8 py-6 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/35 transition-all hover:scale-105">
+                  {signedIn ? "Open Dashboard" : "Get started free"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="#tools">
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover:bg-accent/50 transition-all">
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  See the Tools
+                <Button size="lg" variant="outline" className="text-base px-8 py-6">
+                  See the tools
                 </Button>
               </Link>
             </div>
-            
-            {/* Trust indicators */}
+
             <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <p>No credit card required</p>
-              <div className="w-1 h-1 rounded-full bg-border" />
-              <p>Free tier forever</p>
-              <div className="w-1 h-1 rounded-full bg-border" />
-              <p className="flex items-center gap-1">
-                <Check className="h-4 w-4 text-green-500" />
-                Ready in seconds
-              </p>
+              <span className="flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-green-500" /> No credit card required
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-green-500" /> Free tier forever
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-green-500" /> Ready in seconds
+              </span>
             </div>
           </div>
         </section>
 
-        <section className="border-y bg-muted/30">
-          <div className="container mx-auto px-4 py-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Trusted by{" "}
-              <span className="font-semibold text-foreground">500+</span>{" "}
-              teams, creators, and LLM users
-            </p>
-          </div>
-        </section>
-
-        <section id="tools" className="container mx-auto px-4 py-20">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary mb-6">
-              <Sparkles className="h-4 w-4" />
-              <span className="font-medium">15+ Professional Tools</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-              One tool for{" "}
-              <span className="text-primary">every annoying step</span>
+        {/* Tools */}
+        <section id="tools" className="container mx-auto px-4 py-20 max-w-6xl">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
+              Seven tools. One workflow.
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              No bloat, no setup. Pick a tool, do the thing, paste it back into
-              your model.
+            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+              No bloat, no configuration. Each tool does one thing and does it well.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {tools.map((tool) => (
               <Card
                 key={tool.href}
                 className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1"
               >
-                {/* Subtle gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                
                 <CardHeader className="relative">
-                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                    <tool.icon className="h-6 w-6 text-primary" />
+                  <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                    <tool.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                  <CardTitle className="text-base group-hover:text-primary transition-colors">
                     {tool.title}
                   </CardTitle>
                   <CardDescription className="text-sm leading-relaxed">
                     {tool.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="relative">
+                <CardContent className="relative pt-0">
                   <Link href={signedIn ? tool.href : "/signup"}>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full group-hover:border-primary/50 group-hover:bg-primary/5 transition-all"
                     >
-                      Try it 
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      Try it
+                      <ArrowRight className="ml-2 h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                     </Button>
                   </Link>
                 </CardContent>
@@ -225,144 +205,130 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        <section className="py-24 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
-          <div className="container mx-auto px-4 relative">
-            <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm text-primary mb-6">
-                <Zap className="h-4 w-4" />
-                <span className="font-medium">Simple, transparent pricing</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-                Start free. Upgrade when you{" "}
-                <span className="text-primary">need more</span>.
+        {/* Pricing */}
+        <section className="py-24 relative overflow-hidden bg-muted/30">
+          <div className="container mx-auto px-4 max-w-5xl">
+            <div className="text-center mb-14">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
+                Start free. Grow with your team.
               </h2>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                No hidden fees. No surprises. Cancel anytime.
+                No hidden fees. Cancel anytime.
               </p>
             </div>
-            
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Free Plan */}
-              <Card className="relative group hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
-                <CardHeader className="pb-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <CardTitle className="text-2xl">Free</CardTitle>
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                      <Check className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  </div>
-                  <CardDescription className="text-base">Perfect for trying out</CardDescription>
-                  <div className="mt-6">
-                    <span className="text-5xl font-extrabold">$0</span>
-                    <span className="text-muted-foreground ml-2">/month</span>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Free */}
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl">Free</CardTitle>
+                  <CardDescription>Try everything</CardDescription>
+                  <div className="pt-2">
+                    <span className="text-4xl font-extrabold">$0</span>
+                    <span className="text-muted-foreground ml-1">/month</span>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span className="font-medium">10 uses per tool, per day</span>
+                  <ul className="space-y-3 mb-6 text-sm">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      10 uses per tool, per day
                     </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span className="font-medium">Standard copy / paste</span>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      All 7 core tools
                     </li>
-                    <li className="flex items-center gap-3 text-muted-foreground">
-                      <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <span>No saved history</span>
+                    <li className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="h-4 w-4 shrink-0" />
+                      No prompt library
                     </li>
                   </ul>
-                  <Link
-                    href={signedIn ? "/dashboard" : "/signup"}
-                    className="block"
-                  >
-                    <Button variant="outline" className="w-full py-6 text-lg hover:bg-accent/50 transition-colors">
+                  <Link href={signedIn ? "/dashboard" : "/signup"} className="block">
+                    <Button variant="outline" className="w-full">
                       {signedIn ? "Open Dashboard" : "Get Started"}
                     </Button>
                   </Link>
                 </CardContent>
               </Card>
 
-              {/* Pro Plan */}
-              <Card className="border-primary relative group hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 overflow-hidden">
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-                
-                {/* Popular badge */}
-                <div className="absolute top-6 right-6 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-primary/25">
-                  ⭐ Most Popular
+              {/* Individual Pro */}
+              <Card className="border-primary relative overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none" />
+                <div className="absolute top-4 right-4 bg-primary text-primary-foreground text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+                  Popular
                 </div>
-                
-                <CardHeader className="pb-8 relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <CardTitle className="text-2xl">Pro</CardTitle>
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Zap className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                  <CardDescription className="text-base">For power users</CardDescription>
-                  <div className="mt-6">
-                    <span className="text-5xl font-extrabold">$9</span>
-                    <span className="text-muted-foreground ml-2">/month</span>
-                    <div className="inline-flex items-center gap-2 ml-3">
-                      <span className="text-sm text-muted-foreground line-through">$15</span>
-                      <span className="text-xs bg-green-500/10 text-green-600 px-2 py-0.5 rounded-full font-medium">
-                        Save 40%
-                      </span>
-                    </div>
+                <CardHeader className="relative">
+                  <CardTitle className="text-xl">Individual Pro</CardTitle>
+                  <CardDescription>For solo AI engineers</CardDescription>
+                  <div className="pt-2">
+                    <span className="text-4xl font-extrabold">$19</span>
+                    <span className="text-muted-foreground ml-1">/month</span>
                   </div>
                 </CardHeader>
                 <CardContent className="relative">
-                  <ul className="space-y-4 mb-8">
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span className="font-medium">Unlimited uses</span>
+                  <ul className="space-y-3 mb-6 text-sm">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      <strong>Unlimited</strong> uses
                     </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span>
-                        <strong className="text-foreground">Fine-tuning options</strong> on every tool
-                      </span>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      Fine-tuning options on every tool
                     </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span>
-                        <strong className="text-foreground">Pipeline Continuity</strong> — chain tools
-                      </span>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      500 saved prompts library
                     </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span className="font-medium">Save custom schemas</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-4 w-4 text-green-500" />
-                      </div>
-                      <span className="font-medium">Full history & favorites</span>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      Full history
                     </li>
                   </ul>
-                  <Link
-                    href={signedIn ? "/settings" : "/signup?plan=pro"}
-                    className="block"
-                  >
-                    <Button className="w-full py-6 text-lg shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02]">
+                  <Link href={signedIn ? "/settings" : "/signup?plan=pro"} className="block">
+                    <Button className="w-full shadow-lg shadow-primary/20">
                       {signedIn ? "Upgrade to Pro" : "Start Pro Today"}
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Team */}
+              <Card className="hover:shadow-md transition-all duration-300">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    Team
+                    <span className="text-xs font-normal bg-muted px-2 py-0.5 rounded-full text-muted-foreground">New</span>
+                  </CardTitle>
+                  <CardDescription>For engineering teams</CardDescription>
+                  <div className="pt-2">
+                    <span className="text-4xl font-extrabold">$29</span>
+                    <span className="text-muted-foreground ml-1">/user/month</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6 text-sm">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      Everything in Individual Pro
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      <strong>Shared</strong> prompt library
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      Team invite + audit log
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500 shrink-0" />
+                      Priority support
+                    </li>
+                  </ul>
+                  <Link href="mailto:team@llmutils.co" className="block">
+                    <Button variant="outline" className="w-full">
+                      <Users className="h-4 w-4 mr-2" />
+                      Talk to us
                     </Button>
                   </Link>
                 </CardContent>
@@ -372,7 +338,7 @@ export default async function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t py-12 bg-muted/20">
+      <footer className="border-t py-10 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -382,12 +348,12 @@ export default async function LandingPage() {
               <span className="font-semibold">LLMUtils</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2026 LLMUtils. Built for AI workers.
+              © 2026 LLMUtils. Built for AI engineers.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+              <Link href="mailto:team@llmutils.co" className="hover:text-foreground transition-colors">Contact</Link>
             </div>
           </div>
         </div>

@@ -38,20 +38,12 @@ type Tool = {
 
 const tools: Tool[] = [
   { name: "Markdown", href: "/markdown", description: "Web to Markdown" },
-  { name: "Sanitize", href: "/sanitize", description: "Context Sanitizer" },
-  { name: "Un-Sanitize", href: "/un-sanitizer", description: "Restore masked values" },
-  { name: "JSON", href: "/json", description: "Unstructured to JSON" },
-  { name: "JSON Formatter", href: "/json-formatter", description: "Format & validate JSON" },
-  { name: "CSV to JSON", href: "/csv-to-json", description: "Upload CSV → JSON" },
-  { name: "Regex", href: "/regex", description: "English to Regex" },
-  { name: "Diff", href: "/diff", description: "Compare Prompts" },
-  { name: "Markdown Preview", href: "/markdown-preview", description: "Render LLM Output" },
-  { name: "HTML to JSX", href: "/html-to-jsx", description: "For React Devs" },
-  { name: "Code Minifier", href: "/code-minifier", description: "Minify code" },
+  { name: "Sanitize", href: "/sanitize", description: "PII remover for AI prompts" },
   { name: "Token Estimator", href: "/token-estimator", description: "Estimate tokens & cost" },
+  { name: "Prompt Diff", href: "/diff", description: "Compare prompts A/B" },
   { name: "Chat Exporter", href: "/chat-exporter", description: "Export chat transcripts" },
-  { name: "Image OCR", href: "/image-ocr", description: "Extract text from images" },
-  { name: "Transcribe", href: "/transcribe", description: "YouTube → Text" },
+  { name: "JSON", href: "/json", description: "Unstructured to JSON" },
+  { name: "Regex", href: "/regex", description: "English to Regex" },
 ];
 
 function SidebarContent({
@@ -151,6 +143,19 @@ function SidebarContent({
       )}
 
       <div className="mt-6 space-y-1 border-t pt-3">
+        <Link href="/prompts" passHref onClick={onLink}>
+          <Button
+            variant={pathname === "/prompts" ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <Sparkles className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Prompt Library</span>}
+          </Button>
+        </Link>
+
         <Link href="/history" passHref onClick={onLink}>
           <Button
             variant={pathname === "/history" ? "secondary" : "ghost"}

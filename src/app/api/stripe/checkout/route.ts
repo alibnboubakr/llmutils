@@ -3,6 +3,7 @@ import {
   createCheckoutSession,
   PRO_MONTHLY_PRICE_ID,
   PRO_YEARLY_PRICE_ID,
+  TEAM_MONTHLY_PRICE_ID,
 } from "@/lib/stripe";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 
@@ -21,9 +22,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const plan = body?.plan === "yearly" ? "yearly" : "monthly";
-    const priceId =
-      plan === "yearly" ? PRO_YEARLY_PRICE_ID : PRO_MONTHLY_PRICE_ID;
+    const planKey = body?.plan ?? "monthly";
+
+    let priceId: string;
+    if (planKey === "team") {
+      priceId = TEAM_MONTHLY_PRICE_ID;
+    } else if (planKey === "yearly") {
+      priceId = PRO_YEARLY_PRICE_ID;
+    } else {
+      priceId = PRO_MONTHLY_PRICE_ID;
+    }
 
     if (!priceId) {
       return NextResponse.json(

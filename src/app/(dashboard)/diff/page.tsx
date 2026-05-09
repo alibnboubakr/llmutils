@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import { SavePromptButton } from "@/components/save-prompt-button";
 
 type DiffItem = {
   index: number;
@@ -310,8 +311,9 @@ export default function DiffPage() {
 
       {diff.length > 0 && layout === "unified" && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Diff Result</CardTitle>
+            <SavePromptButton content={text1} tool="diff" />
           </CardHeader>
           <CardContent>
             <div className="space-y-1 font-mono text-sm">

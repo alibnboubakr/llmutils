@@ -9,6 +9,7 @@ import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy } from "lucide-react";
 import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import { SavePromptButton } from "@/components/save-prompt-button";
 import {
   Select,
   SelectContent,
@@ -234,10 +235,13 @@ export default function RegexPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Generated Regex</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleCopy}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy
-              </Button>
+              <div className="flex gap-2">
+                <SavePromptButton content={regex} tool="regex" />
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="bg-muted p-4 rounded-md font-mono text-sm whitespace-pre-wrap">

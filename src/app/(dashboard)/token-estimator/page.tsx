@@ -7,6 +7,7 @@ import { ToolUsageTip } from "@/components/tool-usage-tip";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import { SavePromptButton } from "@/components/save-prompt-button";
 
 // Token pricing per 1K tokens (as of 2026)
 const MODEL_PRICING: Record<string, { input: number; output: number; context: number }> = {
@@ -89,8 +90,9 @@ export default function TokenEstimatorPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Input</CardTitle>
+            <SavePromptButton content={text} tool="token-estimator" />
           </CardHeader>
           <CardContent>
             <Textarea

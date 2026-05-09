@@ -42,6 +42,7 @@ export async function middleware(request: NextRequest) {
     "/dashboard",
     "/history",
     "/settings",
+    "/prompts",
     // Tools — must be signed in to use
     "/markdown",
     "/markdown-preview",

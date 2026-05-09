@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Copy, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ProOptionsPanel, ProField } from "@/components/pro-options-panel";
+import { SavePromptButton } from "@/components/save-prompt-button";
 
 // Force dynamic rendering to avoid SSR issues with Zustand
 export const dynamic = 'force-dynamic';
@@ -217,6 +218,7 @@ export default function MarkdownPage() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Output</CardTitle>
             <div className="flex gap-2">
+              <SavePromptButton content={markdown} tool="markdown" />
               <Button variant="outline" size="sm" onClick={handleCopy}>
                 <Copy className="h-4 w-4 mr-2" />
                 Copy
