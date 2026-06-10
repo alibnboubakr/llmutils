@@ -6,11 +6,17 @@ import { encodeShare, DIMENSION_ORDER } from "@/lib/share";
 import { ScoreDial } from "./score-dial";
 import { DimensionBars } from "./dimension-bars";
 
-const SEVERITY_STYLE: Record<string, string> = {
-  high: "bg-red-500/15 text-red-300 border-red-500/30",
-  medium: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  low: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+const SEVERITY_STYLE: Record<string, { box: string; dot: string }> = {
+  high: { box: "bg-red-500/10 text-red-200 border-red-500/30", dot: "bg-red-400" },
+  medium: { box: "bg-amber-500/10 text-amber-200 border-amber-500/30", dot: "bg-amber-400" },
+  low: { box: "bg-sky-500/10 text-sky-200 border-sky-500/30", dot: "bg-sky-400" },
 };
+
+const EMPTY_STEPS = [
+  { n: "1", title: "Paste your prompt", body: "Any prompt, for any AI model." },
+  { n: "2", title: "Watch it get scored", body: "Live, against 8 dimensions of prompt craft." },
+  { n: "3", title: "Copy the rebuilt version", body: "And share your score — if you dare." },
+];
 
 export function Grader() {
   const [text, setText] = useState("");
@@ -52,7 +58,7 @@ export function Grader() {
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-2xl border border-border bg-surface p-1.5 shadow-[0_0_60px_-20px_rgba(139,92,246,0.4)]">
+      <div className="rounded-2xl border border-border bg-surface p-1.5 shadow-[0_0_80px_-24px_rgba(139,92,246,0.5)] transition focus-within:border-accent/60">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -62,30 +68,62 @@ export function Grader() {
           className="w-full resize-y rounded-xl bg-transparent p-4 text-base text-white/90 outline-none placeholder:text-white/30"
         />
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2">
-          <div className="flex gap-2 text-xs">
+          <div className="flex flex-wrap gap-2 text-xs">
             <button
               onClick={() => setText(EXAMPLE_PROMPTS.weak)}
-              className="rounded-full border border-border px-3 py-1 text-white/50 transition hover:border-accent hover:text-white"
+              className="rounded-full border border-border px-3 py-1 text-white/50 transition hover:border-red-400/60 hover:text-white"
             >
-              Try a weak prompt
+              😬 Try a weak prompt
             </button>
             <button
               onClick={() => setText(EXAMPLE_PROMPTS.strong)}
-              className="rounded-full border border-border px-3 py-1 text-white/50 transition hover:border-accent hover:text-white"
+              className="rounded-full border border-border px-3 py-1 text-white/50 transition hover:border-emerald-400/60 hover:text-white"
             >
-              Try a strong prompt
+              💪 Try a strong prompt
             </button>
+            {text.length > 0 && (
+              <button
+                onClick={() => setText("")}
+                className="rounded-full border border-border px-3 py-1 text-white/40 transition hover:border-border hover:text-white"
+              >
+                Clear
+              </button>
+            )}
           </div>
           <span className="text-xs text-white/30">
-            {result ? `${result.wordCount} words · scored live as you type` : "scores live as you type"}
+            {result
+              ? `${result.wordCount} words · scored live as you type`
+              : "scores live as you type"}
           </span>
         </div>
       </div>
 
+      {!result && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {EMPTY_STEPS.map((s) => (
+            <div
+              key={s.n}
+              className="rounded-2xl border border-border bg-surface/60 p-5"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/20 text-sm font-bold text-accent">
+                {s.n}
+              </span>
+              <p className="mt-3 font-semibold text-white/90">{s.title}</p>
+              <p className="mt-1 text-sm text-white/50">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {result && (
         <div className="grid gap-6 animate-rise">
           {/* Scorecard */}
-          <div className="grid gap-6 rounded-2xl border border-border bg-surface p-6 md:grid-cols-[auto_1fr] md:items-center">
+          <div className="relative grid gap-6 overflow-hidden rounded-2xl border border-border bg-surface p-6 md:grid-cols-[auto_1fr] md:items-center">
+            {result.score >= 90 && (
+              <span className="absolute right-4 top-4 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                🏆 Top {100 - result.percentile}% of prompts
+              </span>
+            )}
             <div className="flex justify-center">
               <ScoreDial score={result.score} grade={result.grade} />
             </div>
@@ -94,8 +132,9 @@ export function Grader() {
                 &ldquo;{result.roast}&rdquo;
               </p>
               <p className="text-sm text-white/50">
-                Better than <b className="text-white/80">{result.percentile}%</b>{" "}
-                of prompts people throw at AI models.
+                Better than{" "}
+                <b className="text-white/80">{result.percentile}%</b> of
+                prompts people throw at AI models.
               </p>
               <DimensionBars
                 items={result.dimensions.map((d) => ({
@@ -107,48 +146,57 @@ export function Grader() {
           </div>
 
           {/* Share */}
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
-            <span className="text-sm font-medium text-white/80">
-              Share your score:
-            </span>
-            <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-white/10 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/20"
-            >
-              Post on X
-            </a>
-            <a
-              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg bg-white/10 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/20"
-            >
-              LinkedIn
-            </a>
-            <button
-              onClick={() => copy(shareUrl, "link")}
-              className="rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold text-white transition hover:opacity-90"
-            >
-              {copied === "link" ? "Copied!" : "Copy link"}
-            </button>
-            <span className="text-xs text-white/40">
+          <div className="rounded-2xl border border-accent/40 bg-gradient-to-r from-accent/15 to-accent-2/10 p-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-semibold text-white/90">
+                Share your scorecard
+              </span>
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-white/10 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                Post on X
+              </a>
+              <a
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-white/10 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/20"
+              >
+                LinkedIn
+              </a>
+              <button
+                onClick={() => copy(shareUrl, "link")}
+                className="rounded-lg bg-accent px-4 py-1.5 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                {copied === "link" ? "Copied!" : "Copy link"}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-white/40">
               Links share only your scorecard — never your prompt.
-            </span>
+            </p>
           </div>
 
           {/* Issues */}
           {result.issues.length > 0 && (
             <div className="grid gap-3 rounded-2xl border border-border bg-surface p-6">
-              <h2 className="text-lg font-semibold">What&apos;s costing you points</h2>
+              <h2 className="text-lg font-semibold">
+                What&apos;s costing you points
+              </h2>
               {result.issues.map((issue) => (
                 <div
                   key={issue.title}
-                  className={`rounded-xl border p-4 ${SEVERITY_STYLE[issue.severity]}`}
+                  className={`rounded-xl border p-4 ${SEVERITY_STYLE[issue.severity].box}`}
                 >
-                  <p className="font-medium">{issue.title}</p>
-                  <p className="mt-1 text-sm opacity-80">{issue.fix}</p>
+                  <p className="flex items-center gap-2 font-medium">
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${SEVERITY_STYLE[issue.severity].dot}`}
+                    />
+                    {issue.title}
+                  </p>
+                  <p className="mt-1 pl-4 text-sm opacity-80">{issue.fix}</p>
                 </div>
               ))}
             </div>

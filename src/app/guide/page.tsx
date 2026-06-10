@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteHeader, SiteFooter } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "The 8-Point Prompt Checklist — PromptScore",
@@ -61,17 +62,7 @@ const SECTIONS = [
 export default function GuidePage() {
   return (
     <main className="mx-auto max-w-3xl px-4 pb-24">
-      <header className="flex items-center justify-between py-6">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          Prompt<span className="text-accent">Score</span>
-        </Link>
-        <Link
-          href="/"
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-        >
-          Grade my prompt
-        </Link>
-      </header>
+      <SiteHeader cta />
 
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight">
         The 8-point prompt checklist
@@ -112,6 +103,8 @@ export default function GuidePage() {
           Now grade your prompt →
         </Link>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

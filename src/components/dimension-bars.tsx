@@ -8,7 +8,10 @@ export function DimensionBars({
   return (
     <div className="grid gap-2.5">
       {items.map((d) => (
-        <div key={d.label} className="grid grid-cols-[130px_1fr_36px] items-center gap-3 text-sm">
+        <div
+          key={d.label}
+          className="grid grid-cols-[100px_1fr_32px] items-center gap-2 text-xs sm:grid-cols-[130px_1fr_36px] sm:gap-3 sm:text-sm"
+        >
           <span className="truncate text-white/70">{d.label}</span>
           <div className="h-2 overflow-hidden rounded-full bg-border">
             <div
@@ -16,7 +19,7 @@ export function DimensionBars({
               style={{
                 width: `${d.score}%`,
                 background: scoreColor(d.score),
-                transition: "width 0.5s ease",
+                transition: "width 0.5s ease, background 0.5s ease",
               }}
             />
           </div>

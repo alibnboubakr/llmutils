@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { decodeShare, DIMENSION_ORDER, DIMENSION_LABELS } from "@/lib/share";
 import { ScoreDial } from "@/components/score-dial";
 import { DimensionBars } from "@/components/dimension-bars";
+import { SiteHeader, SiteFooter } from "@/components/site-header";
 
 interface Props {
   params: Promise<{ code: string }>;
@@ -30,13 +31,9 @@ export default async function SharePage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-2xl px-4 pb-24">
-      <header className="py-6">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          Prompt<span className="text-accent">Score</span>
-        </Link>
-      </header>
+      <SiteHeader cta />
 
-      <section className="grid gap-6 rounded-2xl border border-border bg-surface p-8 text-center">
+      <section className="mt-8 grid gap-6 rounded-2xl border border-border bg-surface p-8 text-center">
         <p className="text-sm uppercase tracking-widest text-white/40">
           Someone&apos;s prompt scored
         </p>
@@ -70,6 +67,8 @@ export default async function SharePage({ params }: Props) {
           Free · instant · no signup · your prompt never leaves your browser
         </p>
       </section>
+
+      <SiteFooter />
     </main>
   );
 }

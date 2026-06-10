@@ -1,55 +1,66 @@
 import Link from "next/link";
 import { Grader } from "@/components/grader";
+import { SiteHeader, SiteFooter } from "@/components/site-header";
+
+const TRUST_POINTS = [
+  { icon: "⚡", title: "Instant", body: "Scored in milliseconds, live as you type. No button, no spinner." },
+  { icon: "🔒", title: "Private", body: "Runs 100% in your browser. Your prompt never leaves your device." },
+  { icon: "🆓", title: "Free forever", body: "No signup, no paywall, no usage limits. Grade all day." },
+];
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-3xl px-4 pb-24">
-      <header className="flex items-center justify-between py-6">
-        <span className="text-lg font-bold tracking-tight">
-          Prompt<span className="text-accent">Score</span>
-        </span>
-        <Link
-          href="/guide"
-          className="text-sm text-white/50 transition hover:text-white"
-        >
-          Prompt-writing guide
-        </Link>
-      </header>
+    <main className="mx-auto max-w-3xl px-4 pb-12">
+      <SiteHeader />
 
-      <section className="py-10 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
+      <section className="pb-10 pt-12 text-center">
+        <span className="inline-block rounded-full border border-accent/40 bg-accent/10 px-4 py-1 text-xs font-medium text-accent">
+          Free · No signup · Your prompt never leaves your browser
+        </span>
+        <h1 className="mt-6 text-4xl font-extrabold tracking-tight md:text-6xl">
           How good is{" "}
           <span className="bg-gradient-to-r from-accent to-accent-2 bg-clip-text text-transparent">
             your prompt?
           </span>
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-white/55">
+        <p className="mx-auto mt-5 max-w-xl text-lg text-white/55">
           Paste any ChatGPT, Claude, or Gemini prompt. Get a 0-100 score, a
-          roast, and a rebuilt version that actually works — instantly, free,
-          no signup.
+          roast, and a rebuilt version that actually works — instantly.
         </p>
       </section>
 
       <Grader />
 
-      <section className="mt-20 grid gap-4 text-center text-sm text-white/40">
-        <p>
-          Scored against 8 dimensions of prompt engineering — task clarity,
-          specificity, context, format, constraints, examples, role, and
-          wording. Everything runs in your browser:{" "}
-          <b className="text-white/60">your prompt never leaves your device.</b>
-        </p>
-        <p>
-          <Link href="/guide" className="text-accent hover:underline">
-            Learn what each dimension means →
-          </Link>
-        </p>
+      <section className="mt-20 grid gap-4 sm:grid-cols-3">
+        {TRUST_POINTS.map((t) => (
+          <div
+            key={t.title}
+            className="rounded-2xl border border-border bg-surface/60 p-5 text-center"
+          >
+            <span className="text-2xl">{t.icon}</span>
+            <p className="mt-2 font-semibold text-white/90">{t.title}</p>
+            <p className="mt-1 text-sm text-white/50">{t.body}</p>
+          </div>
+        ))}
       </section>
 
-      <footer className="mt-20 border-t border-border pt-6 text-center text-xs text-white/30">
-        PromptScore by llmutils.co — free forever. Built for people who talk to
-        AI all day.
-      </footer>
+      <section className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
+        <h2 className="text-2xl font-bold">What&apos;s actually being graded?</h2>
+        <p className="mx-auto mt-3 max-w-xl text-white/55">
+          Your prompt is scored against 8 weighted dimensions of prompt
+          engineering — task definition, specificity, context, output format,
+          constraints, clarity, examples, and role. The same checklist
+          professionals use, automated.
+        </p>
+        <Link
+          href="/guide"
+          className="mt-5 inline-block rounded-xl border border-accent/50 px-6 py-3 font-semibold text-accent transition hover:bg-accent hover:text-white"
+        >
+          Read the 8-point checklist →
+        </Link>
+      </section>
+
+      <SiteFooter />
     </main>
   );
 }
