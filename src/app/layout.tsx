@@ -1,23 +1,36 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { CmdKProvider } from "@/components/cmd-k";
-import { SidebarProvider } from "@/components/sidebar";
-import { ensureEnvVars } from "@/lib/env";
 
-const inter = Inter({ subsets: ["latin"] });
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://llmutils.co";
 
 export const metadata: Metadata = {
-  title: "LLMUtils — The Missing Toolbox for AI Workers",
+  metadataBase: new URL(SITE_URL),
+  title: "PromptScore — Rate your AI prompt in seconds",
   description:
-    "Stop wrestling with context, formats, and API costs. Build prompts faster, safer.",
+    "Paste any ChatGPT, Claude, or Gemini prompt and get an instant 0-100 score, a brutal roast, and a rewritten version that actually works. Free, no signup.",
+  keywords: [
+    "prompt grader",
+    "rate my prompt",
+    "prompt score",
+    "prompt engineering checker",
+    "improve AI prompts",
+    "ChatGPT prompt checker",
+  ],
+  openGraph: {
+    title: "PromptScore — How good is your prompt?",
+    description:
+      "Get your prompt scored 0-100 in one second. Free, instant, no signup.",
+    url: SITE_URL,
+    siteName: "PromptScore",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PromptScore — How good is your prompt?",
+    description:
+      "Get your prompt scored 0-100 in one second. Free, instant, no signup.",
+  },
 };
-
-// Validate environment variables on server startup
-if (typeof window === 'undefined') {
-  ensureEnvVars();
-}
 
 export default function RootLayout({
   children,
@@ -25,17 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-        >
-          <CmdKProvider>
-            <SidebarProvider>{children}</SidebarProvider>
-          </CmdKProvider>
-        </ThemeProvider>
+    <html lang="en">
+      <body className="min-h-screen bg-bg font-sans antialiased">
+        {children}
       </body>
     </html>
   );
