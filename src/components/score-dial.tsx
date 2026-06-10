@@ -68,7 +68,7 @@ export function ScoreDial({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#26263a"
+          style={{ stroke: "var(--border)" }}
           strokeWidth={stroke}
         />
         <circle
@@ -91,7 +91,7 @@ export function ScoreDial({
           {displayed}
         </div>
         <div
-          className="mt-1 font-semibold text-white/60"
+          className="mt-1 font-semibold text-muted"
           style={{ fontSize: size * 0.11 }}
         >
           Grade {grade}

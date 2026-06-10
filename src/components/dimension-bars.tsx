@@ -12,7 +12,7 @@ export function DimensionBars({
           key={d.label}
           className="grid grid-cols-[100px_1fr_32px] items-center gap-2 text-xs sm:grid-cols-[130px_1fr_36px] sm:gap-3 sm:text-sm"
         >
-          <span className="truncate text-white/70">{d.label}</span>
+          <span className="truncate text-muted">{d.label}</span>
           <div className="h-2 overflow-hidden rounded-full bg-border">
             <div
               className="h-full rounded-full"
@@ -23,7 +23,7 @@ export function DimensionBars({
               }}
             />
           </div>
-          <span className="text-right tabular-nums text-white/50">
+          <span className="text-right tabular-nums text-faint">
             {d.score}
           </span>
         </div>

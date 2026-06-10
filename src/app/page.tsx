@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Grader } from "@/components/grader";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
+import { POSTS } from "@/lib/posts";
 
 const TRUST_POINTS = [
   { icon: "⚡", title: "Instant", body: "Scored in milliseconds, live as you type. No button, no spinner." },
@@ -9,6 +10,8 @@ const TRUST_POINTS = [
 ];
 
 export default function Home() {
+  const latestPosts = POSTS.slice(0, 3);
+
   return (
     <main className="mx-auto max-w-3xl px-4 pb-12">
       <SiteHeader />
@@ -23,7 +26,7 @@ export default function Home() {
             your prompt?
           </span>
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-white/55">
+        <p className="mx-auto mt-5 max-w-xl text-lg text-muted">
           Paste any ChatGPT, Claude, or Gemini prompt. Get a 0-100 score, a
           roast, and a rebuilt version that actually works — instantly.
         </p>
@@ -38,15 +41,15 @@ export default function Home() {
             className="rounded-2xl border border-border bg-surface/60 p-5 text-center"
           >
             <span className="text-2xl">{t.icon}</span>
-            <p className="mt-2 font-semibold text-white/90">{t.title}</p>
-            <p className="mt-1 text-sm text-white/50">{t.body}</p>
+            <p className="mt-2 font-semibold text-fg">{t.title}</p>
+            <p className="mt-1 text-sm text-muted">{t.body}</p>
           </div>
         ))}
       </section>
 
       <section className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
         <h2 className="text-2xl font-bold">What&apos;s actually being graded?</h2>
-        <p className="mx-auto mt-3 max-w-xl text-white/55">
+        <p className="mx-auto mt-3 max-w-xl text-muted">
           Your prompt is scored against 8 weighted dimensions of prompt
           engineering — task definition, specificity, context, output format,
           constraints, clarity, examples, and role. The same checklist
@@ -58,6 +61,32 @@ export default function Home() {
         >
           Read the 8-point checklist →
         </Link>
+      </section>
+
+      <section className="mt-16">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-2xl font-bold">From the blog</h2>
+          <Link href="/blog" className="text-sm text-accent hover:underline">
+            All posts →
+          </Link>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          {latestPosts.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/blog/${post.slug}`}
+              className="group rounded-2xl border border-border bg-surface/60 p-5 transition hover:border-accent/50"
+            >
+              <p className="text-xs text-faint">{post.readingTime} min read</p>
+              <p className="mt-2 font-semibold leading-snug text-fg transition group-hover:text-accent">
+                {post.title}
+              </p>
+              <p className="mt-2 line-clamp-3 text-sm text-muted">
+                {post.description}
+              </p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <SiteFooter />

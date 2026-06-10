@@ -34,17 +34,17 @@ export default async function SharePage({ params }: Props) {
       <SiteHeader cta />
 
       <section className="mt-8 grid gap-6 rounded-2xl border border-border bg-surface p-8 text-center">
-        <p className="text-sm uppercase tracking-widest text-white/40">
+        <p className="text-sm uppercase tracking-widest text-faint">
           Someone&apos;s prompt scored
         </p>
         <div className="flex justify-center">
           <ScoreDial score={payload.s} grade={payload.g} size={200} />
         </div>
-        <p className="text-lg font-medium text-white/90">
+        <p className="text-lg font-medium text-fg">
           &ldquo;{payload.r}&rdquo;
         </p>
-        <p className="text-sm text-white/50">
-          Better than <b className="text-white/80">{payload.p}%</b> of prompts.
+        <p className="text-sm text-muted">
+          Better than <b className="text-fg">{payload.p}%</b> of prompts.
         </p>
         <div className="text-left">
           <DimensionBars
@@ -63,7 +63,7 @@ export default async function SharePage({ params }: Props) {
         >
           Think you can beat {payload.s}? Grade your prompt →
         </Link>
-        <p className="mt-3 text-xs text-white/40">
+        <p className="mt-3 text-xs text-faint">
           Free · instant · no signup · your prompt never leaves your browser
         </p>
       </section>

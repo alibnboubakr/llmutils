@@ -67,7 +67,7 @@ export default function GuidePage() {
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight">
         The 8-point prompt checklist
       </h1>
-      <p className="mt-4 text-lg text-white/55">
+      <p className="mt-4 text-lg text-muted">
         This is exactly how PromptScore grades your prompt — the same 8
         dimensions, the same weights. Hit all 8 and you&apos;ll score 90+ on
         any prompt, for any model.
@@ -80,15 +80,15 @@ export default function GuidePage() {
             className="rounded-2xl border border-border bg-surface p-6"
           >
             <h2 className="text-xl font-semibold">{s.title}</h2>
-            <p className="mt-2 text-white/60">{s.body}</p>
+            <p className="mt-2 text-muted">{s.body}</p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm">
-                <span className="font-semibold text-red-300">Weak: </span>
-                <span className="text-white/70">&ldquo;{s.bad}&rdquo;</span>
+                <span className="font-semibold text-red-700 dark:text-red-300">Weak: </span>
+                <span className="text-muted">&ldquo;{s.bad}&rdquo;</span>
               </div>
               <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm">
-                <span className="font-semibold text-emerald-300">Strong: </span>
-                <span className="text-white/70">&ldquo;{s.good}&rdquo;</span>
+                <span className="font-semibold text-emerald-700 dark:text-emerald-300">Strong: </span>
+                <span className="text-muted">&ldquo;{s.good}&rdquo;</span>
               </div>
             </div>
           </section>

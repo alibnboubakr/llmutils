@@ -41,7 +41,19 @@ npm run dev   # http://localhost:3000
 npm run build # production build
 ```
 
-Optional env: `NEXT_PUBLIC_APP_URL` (defaults to `https://llmutils.co`) — used for share links, sitemap, and OG metadata.
+Optional env:
+
+- `NEXT_PUBLIC_APP_URL` (defaults to `https://llmutils.co`) — used for share links, sitemap, and OG metadata.
+- `NEXT_PUBLIC_ADSENSE_CLIENT` (e.g. `ca-pub-1234567890123456`) — when set, injects the Google AdSense script on every page and serves a matching `/ads.txt`. Leave unset until your AdSense application is approved.
+
+## Site map
+
+- `/` — the grader (live scoring, share links, rebuilt prompt)
+- `/s/[code]` — shareable scorecards with dynamic OG images
+- `/guide` — the 8-point prompt checklist (SEO)
+- `/blog` + 6 articles on prompting best practices (SEO + AdSense content depth)
+- `/about`, `/contact`, `/privacy`, `/terms` — trust pages required for AdSense review
+- Light/dark theme toggle (dark default, persisted in localStorage)
 
 ## Launch checklist
 
